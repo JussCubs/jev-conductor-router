@@ -1,5 +1,5 @@
 import { DEFAULT_ROUTING_LEARNING, learnedRouteScore, type RoutingEvidence, type RoutingLearningPolicy } from "./learning.js";
-export { assessTask } from "./jev.js";
+export { assessTask, assessDelegation } from "./jev.js";
 export type Agent = "codex" | "claude" | "cursor";
 export interface Connection {
   agent: Agent; accountFingerprint: string; authKind: "subscription" | "byok";
@@ -22,7 +22,7 @@ export function validatePolicy(value: unknown): Policy {
   const seen = new Set<string>();
   for (const m of p.models) {
     if (!m || !["codex", "claude", "cursor"].includes(m.agent) || typeof m.model !== "string" || !m.model
-      || !Number.isInteger(m.capability) || m.capability < 0 || m.capability > 3 || !Array.isArray(m.efforts) || !m.efforts.length
+      || !Number.isInteger(m.capability) || m.capability < 0 || m.capability > 3 || !Array.isArray(m.efforts)
       || m.efforts.some((e) => !["none", "low", "medium", "high", "xhigh", "max", "ultra"].includes(e))
       || seen.has(m.agent + ":" + m.model)) throw new Error("Invalid or duplicate model");
     seen.add(m.agent + ":" + m.model);
@@ -55,15 +55,15 @@ export function selectRoute(input: { difficulty: number; connections: Connection
   const connections = validateConnections(input.connections);
   if (!Number.isInteger(input.difficulty) || input.difficulty < 0 || input.difficulty > 3) throw new Error("Invalid task difficulty");
   const candidates = policy.models.flatMap((m) => {
-    if ((input.agent && input.agent !== m.agent) || (input.model && input.model !== m.model) || (!input.model && m.capability < input.difficulty)) return [];
+    if ((input.agent && input.agent !== m.agent) || (input.model && input.model !== m.model) || (!input.model && (m.capability < input.difficulty || (m.capability === 3 && input.difficulty < 3)))) return [];
     const connection = connections.find((c) => c.agent === m.agent && c.enabled && c.models.includes(m.model));
     if (!connection) return [];
     const quota = quotaState(connection, policy, input.now);
     if (quota.state === "exhausted") return [];
     const wanted = input.effort ?? (m.agent === "cursor" ? ["low", "high", "xhigh", "xhigh"] : ["low", "high", "xhigh", "max"])[input.difficulty];
-    if (input.effort && !m.efforts.includes(input.effort)) return [];
+    if (input.effort && m.efforts.length && !m.efforts.includes(input.effort)) return [];
     const effort = m.efforts.includes(wanted) ? wanted : m.efforts[m.efforts.length - 1];
-    const learning = learnedRouteScore({ ...m, effort, difficulty: input.difficulty, evidence: input.evidence ?? [], policy: policy.learning, now: input.now });
+    const learning = learnedRouteScore({ ...m, effort: effort ?? "default", difficulty: input.difficulty, evidence: input.evidence ?? [], policy: policy.learning, now: input.now });
     const baseScore = (quota.remainingPercent === null ? -35 : quota.remainingPercent < policy.reservePercent ? -60 + quota.remainingPercent : quota.remainingPercent / 5)
       - (input.model ? 0 : m.capability - input.difficulty) * 15;
     return [{ agent: m.agent, model: m.model, capability: m.capability, effort, authKind: connection.authKind, ...quota, baseScore, learning, score: baseScore + learning.adjustment }];

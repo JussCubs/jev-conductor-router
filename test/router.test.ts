@@ -70,3 +70,9 @@ test("idle before working, cancellation and repeated polling do not manufacture 
     assert.equal((await stat(path)).mode & 0o777, 0o600);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
+
+test("Composer launches without an effort control; frontier is reserved for frontier tasks", () => {
+  const r = selectRoute({ difficulty: 1, connections: connections(), policy, now, model: "composer-2.5", effort: "high" });
+  assert.equal(r.effort, undefined); assert.equal(r.model, "composer-2.5"); assert.equal(r.fastMode, false);
+  assert.ok(selectRoute({ difficulty: 0, connections: connections(), policy, now }).candidates.every((c) => c.capability < 3));
+});

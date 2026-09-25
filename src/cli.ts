@@ -3,12 +3,13 @@ import { readFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
-import { assessTask, selectRoute, validateConnections, validatePolicy } from "./router.js";
+import { assessDelegation, assessTask, selectRoute, validateConnections, validatePolicy } from "./router.js";
 import { observeRun, readRuns, updateRuns } from "./store.js";
 try { process.loadEnvFile(); } catch (e: any) { if (e.code !== "ENOENT") throw e; }
 const { values: args, positionals } = parseArgs({ allowPositionals: true, options: {
   snapshot: { type: "string", default: "connections.json" }, policy: { type: "string", default: "examples/policy.json" },
   state: { type: "string", default: ".jev-router-state.json" }, "task-file": { type: "string" },
+  delegation: { type: "string", default: "auto" },
   project: { type: "string" }, agent: { type: "string" }, model: { type: "string" }, effort: { type: "string" },
   session: { type: "string" }, success: { type: "string" }, dataset: { type: "string" },
 } });
@@ -71,10 +72,13 @@ async function main() {
   if (!args["task-file"]) throw new Error("Pass --task-file with the task brief");
   const task = await readFile(args["task-file"], "utf8");
   if (!task.trim()) throw new Error("The task brief is empty");
+  if (!["auto", "conductor"].includes(args.delegation)) throw new Error("--delegation must be auto or conductor");
+  const delegation = args.delegation === "conductor" ? { useConductor: true, source: "explicit", reason: "Explicit user request for Conductor." } : await assessDelegation(task);
+  if (!delegation.useConductor) { print({ launched: false, delegation }); return; }
   const assessment = args.model ? { level: 2, label: "explicit", source: "explicit", confidence: null } : await assessTask(task);
   const evidence = (await readRuns(state)).filter((r) => r.account === account);
   const decision = selectRoute({ policy, connections, evidence, difficulty: assessment.level, agent: args.agent, model: args.model, effort: args.effort });
-  if (command === "route") { print({ assessment, ...decision }); return; }
+  if (command === "route") { print({ delegation, assessment, ...decision }); return; }
   if (!args.project) throw new Error("Launch requires an exact Conductor --project ID");
   // One mutation only: a dropped response may have launched a real job.
   const result = await conductor("/v0/workspaces", { projectId: args.project, message: task,
@@ -85,12 +89,12 @@ async function main() {
     try {
       await updateRuns(state, (rows) => rows.some((r) => r.account === account && r.sessionId === sessionId) ? rows : [...rows, {
         account, sessionId, workspaceId: result.workspaceId || result.id, createdAt: new Date().toISOString(),
-        agent: decision.agent, model: decision.model, effort: decision.effort, difficulty: args.model ? -1 : assessment.level,
+        agent: decision.agent, model: decision.model, effort: decision.effort ?? "default", difficulty: args.model ? -1 : assessment.level,
         seenWorking: false, reliability: null, reliabilityAt: null, quality: null, qualityAt: null, decision: { assessment, ...decision },
       }]); learningSaved = true;
     } catch { /* An accepted launch must not be reported as a failed mutation. */ }
   }
   print({ launched: true, workspaceId: result.workspaceId || result.id, sessionId, deepLink: result.deepLink,
-    learningSaved, assessment, ...decision });
+    learningSaved, delegation, assessment, ...decision });
 }
 main().catch((error) => { console.error(error instanceof Error ? error.message : "Routing failed"); process.exitCode = 1; });

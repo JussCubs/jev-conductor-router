@@ -1,7 +1,7 @@
 # Jev Conductor Router
 
 Route a coding task to a Conductor harness, model and reasoning effort using
-Jev task assessment, discovered account quota and bounded outcome learning.
+Jev delegation and task assessment, discovered account quota and bounded outcome learning.
 Every launch explicitly sends `fastMode: false`.
 
 This is a standalone routing package: no application backend, database service,
@@ -83,7 +83,7 @@ of guessing account identity.
 ## How selection works
 
 1. Jev classifies task difficulty. Invalid, uncertain or unavailable decisions
-   conservatively require frontier capability. Missing configuration is an error.
+   use a disclosed standard fallback, never frontier escalation. The difficulty decision uses the probability distribution: 54% routine plus 45% standard stays standard. Frontier requires at least 65% probability and is excluded from lower-tier automatic routes. Missing configuration is an error.
 2. Filter by discovered/enabled harnesses, model allowlists, explicit choices,
    capability and known exhaustion. The tightest quota window controls headroom.
 3. Rank eligible models by quota headroom and capability fit. Unknown quota and
@@ -132,7 +132,9 @@ but no finite dataset establishes the best router for every possible task.
 ## Library and evaluation
 
 ```ts
-import { assessTask, selectRoute } from 'jev-conductor-router';
+import { assessDelegation, assessTask, selectRoute } from 'jev-conductor-router';
+const delegation = await assessDelegation(task);
+if (!delegation.useConductor) return; // Continue with the current assistant.
 const assessment = await assessTask(task);
 const route = selectRoute({
   difficulty: assessment.level, policy, connections, evidence,
@@ -164,3 +166,8 @@ The scoring and learning policy is extracted from a production Conductor
 integration. This repository contains only standalone routing, discovery,
 provider adapters, local outcome storage and evaluation fixtures. Public provider
 contracts and the example catalog were checked on 2026-09-25.
+
+
+Before routing or launching, Jev decides whether a separate coding workspace is useful. Explanations and ordinary lookups return `launched: false`; repository edits, builds and tests can proceed. If delegation assessment fails, no session is launched. Use `--delegation conductor` only for an explicit user request to use Conductor. This does not bypass model capability or quota constraints.
+
+Per-model effort controls matter: `composer-2.5` and Cursor `auto` have no effort parameter. Configure `efforts: []`; the router omits the wire field even if an effort override was supplied. Outcomes use the internal `default` key for these models, never an invalid API effort. All launches still send `fastMode: false`.
