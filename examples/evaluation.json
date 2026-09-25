@@ -1,0 +1,380 @@
+[
+  {
+    "name": "routine uses efficient capable model",
+    "difficulty": 0,
+    "now": 1790359200000,
+    "connections": [
+      {
+        "agent": "codex",
+        "accountFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authKind": "subscription",
+        "enabled": true,
+        "models": [
+          "gpt-6-astra",
+          "gpt-6-sol",
+          "gpt-6-luna"
+        ],
+        "observedAt": "2026-09-25T18:00:00.000Z",
+        "windows": [
+          {
+            "usedPercent": 20,
+            "resetsAt": "2026-09-26T18:00:00.000Z"
+          }
+        ],
+        "quotaError": null
+      },
+      {
+        "agent": "claude",
+        "accountFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authKind": "subscription",
+        "enabled": true,
+        "models": [
+          "fable-5-1",
+          "opus-5-5-1m",
+          "sonnet-5-1m"
+        ],
+        "observedAt": "2026-09-25T18:00:00.000Z",
+        "windows": [
+          {
+            "usedPercent": 20,
+            "resetsAt": "2026-09-26T18:00:00.000Z"
+          }
+        ],
+        "quotaError": null
+      },
+      {
+        "agent": "cursor",
+        "accountFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authKind": "subscription",
+        "enabled": true,
+        "models": [
+          "grok-4.7",
+          "composer-2.5"
+        ],
+        "observedAt": "2026-09-25T18:00:00.000Z",
+        "windows": [
+          {
+            "usedPercent": 20,
+            "resetsAt": "2026-09-26T18:00:00.000Z"
+          }
+        ],
+        "quotaError": null
+      }
+    ],
+    "expectedModel": "gpt-6-luna"
+  },
+  {
+    "name": "complex requires stronger model",
+    "difficulty": 2,
+    "now": 1790359200000,
+    "connections": [
+      {
+        "agent": "codex",
+        "accountFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authKind": "subscription",
+        "enabled": true,
+        "models": [
+          "gpt-6-astra",
+          "gpt-6-sol",
+          "gpt-6-luna"
+        ],
+        "observedAt": "2026-09-25T18:00:00.000Z",
+        "windows": [
+          {
+            "usedPercent": 20,
+            "resetsAt": "2026-09-26T18:00:00.000Z"
+          }
+        ],
+        "quotaError": null
+      },
+      {
+        "agent": "claude",
+        "accountFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authKind": "subscription",
+        "enabled": true,
+        "models": [
+          "fable-5-1",
+          "opus-5-5-1m",
+          "sonnet-5-1m"
+        ],
+        "observedAt": "2026-09-25T18:00:00.000Z",
+        "windows": [
+          {
+            "usedPercent": 20,
+            "resetsAt": "2026-09-26T18:00:00.000Z"
+          }
+        ],
+        "quotaError": null
+      },
+      {
+        "agent": "cursor",
+        "accountFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authKind": "subscription",
+        "enabled": true,
+        "models": [
+          "grok-4.7",
+          "composer-2.5"
+        ],
+        "observedAt": "2026-09-25T18:00:00.000Z",
+        "windows": [
+          {
+            "usedPercent": 20,
+            "resetsAt": "2026-09-26T18:00:00.000Z"
+          }
+        ],
+        "quotaError": null
+      }
+    ],
+    "expectedModel": "gpt-6-sol"
+  },
+  {
+    "name": "frontier keeps capability floor",
+    "difficulty": 3,
+    "now": 1790359200000,
+    "connections": [
+      {
+        "agent": "codex",
+        "accountFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authKind": "subscription",
+        "enabled": true,
+        "models": [
+          "gpt-6-astra",
+          "gpt-6-sol",
+          "gpt-6-luna"
+        ],
+        "observedAt": "2026-09-25T18:00:00.000Z",
+        "windows": [
+          {
+            "usedPercent": 20,
+            "resetsAt": "2026-09-26T18:00:00.000Z"
+          }
+        ],
+        "quotaError": null
+      },
+      {
+        "agent": "claude",
+        "accountFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authKind": "subscription",
+        "enabled": true,
+        "models": [
+          "fable-5-1",
+          "opus-5-5-1m",
+          "sonnet-5-1m"
+        ],
+        "observedAt": "2026-09-25T18:00:00.000Z",
+        "windows": [
+          {
+            "usedPercent": 20,
+            "resetsAt": "2026-09-26T18:00:00.000Z"
+          }
+        ],
+        "quotaError": null
+      },
+      {
+        "agent": "cursor",
+        "accountFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authKind": "subscription",
+        "enabled": true,
+        "models": [
+          "grok-4.7",
+          "composer-2.5"
+        ],
+        "observedAt": "2026-09-25T18:00:00.000Z",
+        "windows": [
+          {
+            "usedPercent": 20,
+            "resetsAt": "2026-09-26T18:00:00.000Z"
+          }
+        ],
+        "quotaError": null
+      }
+    ],
+    "expectedModel": "gpt-6-astra"
+  },
+  {
+    "name": "reviewed failures change an eligible peer preference",
+    "difficulty": 2,
+    "now": 1790359200000,
+    "connections": [
+      {
+        "agent": "codex",
+        "accountFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authKind": "subscription",
+        "enabled": true,
+        "models": [
+          "gpt-6-astra",
+          "gpt-6-sol",
+          "gpt-6-luna"
+        ],
+        "observedAt": "2026-09-25T18:00:00.000Z",
+        "windows": [
+          {
+            "usedPercent": 20,
+            "resetsAt": "2026-09-26T18:00:00.000Z"
+          }
+        ],
+        "quotaError": null
+      },
+      {
+        "agent": "claude",
+        "accountFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authKind": "subscription",
+        "enabled": true,
+        "models": [
+          "fable-5-1",
+          "opus-5-5-1m",
+          "sonnet-5-1m"
+        ],
+        "observedAt": "2026-09-25T18:00:00.000Z",
+        "windows": [
+          {
+            "usedPercent": 20,
+            "resetsAt": "2026-09-26T18:00:00.000Z"
+          }
+        ],
+        "quotaError": null
+      },
+      {
+        "agent": "cursor",
+        "accountFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authKind": "subscription",
+        "enabled": true,
+        "models": [
+          "grok-4.7",
+          "composer-2.5"
+        ],
+        "observedAt": "2026-09-25T18:00:00.000Z",
+        "windows": [
+          {
+            "usedPercent": 20,
+            "resetsAt": "2026-09-26T18:00:00.000Z"
+          }
+        ],
+        "quotaError": null
+      }
+    ],
+    "expectedModel": "opus-5-5-1m",
+    "evidence": [
+      {
+        "agent": "codex",
+        "model": "gpt-6-sol",
+        "effort": "xhigh",
+        "difficulty": 2,
+        "reliability": true,
+        "reliabilityAt": "2026-09-25T18:00:00.000Z",
+        "quality": false,
+        "qualityAt": "2026-09-25T18:00:00.000Z"
+      },
+      {
+        "agent": "codex",
+        "model": "gpt-6-sol",
+        "effort": "xhigh",
+        "difficulty": 2,
+        "reliability": true,
+        "reliabilityAt": "2026-09-25T18:00:00.000Z",
+        "quality": false,
+        "qualityAt": "2026-09-25T18:00:00.000Z"
+      },
+      {
+        "agent": "codex",
+        "model": "gpt-6-sol",
+        "effort": "xhigh",
+        "difficulty": 2,
+        "reliability": true,
+        "reliabilityAt": "2026-09-25T18:00:00.000Z",
+        "quality": false,
+        "qualityAt": "2026-09-25T18:00:00.000Z"
+      },
+      {
+        "agent": "codex",
+        "model": "gpt-6-sol",
+        "effort": "xhigh",
+        "difficulty": 2,
+        "reliability": true,
+        "reliabilityAt": "2026-09-25T18:00:00.000Z",
+        "quality": false,
+        "qualityAt": "2026-09-25T18:00:00.000Z"
+      },
+      {
+        "agent": "codex",
+        "model": "gpt-6-sol",
+        "effort": "xhigh",
+        "difficulty": 2,
+        "reliability": true,
+        "reliabilityAt": "2026-09-25T18:00:00.000Z",
+        "quality": false,
+        "qualityAt": "2026-09-25T18:00:00.000Z"
+      },
+      {
+        "agent": "codex",
+        "model": "gpt-6-sol",
+        "effort": "xhigh",
+        "difficulty": 2,
+        "reliability": true,
+        "reliabilityAt": "2026-09-25T18:00:00.000Z",
+        "quality": false,
+        "qualityAt": "2026-09-25T18:00:00.000Z"
+      },
+      {
+        "agent": "codex",
+        "model": "gpt-6-sol",
+        "effort": "xhigh",
+        "difficulty": 2,
+        "reliability": true,
+        "reliabilityAt": "2026-09-25T18:00:00.000Z",
+        "quality": false,
+        "qualityAt": "2026-09-25T18:00:00.000Z"
+      },
+      {
+        "agent": "codex",
+        "model": "gpt-6-sol",
+        "effort": "xhigh",
+        "difficulty": 2,
+        "reliability": true,
+        "reliabilityAt": "2026-09-25T18:00:00.000Z",
+        "quality": false,
+        "qualityAt": "2026-09-25T18:00:00.000Z"
+      },
+      {
+        "agent": "codex",
+        "model": "gpt-6-sol",
+        "effort": "xhigh",
+        "difficulty": 2,
+        "reliability": true,
+        "reliabilityAt": "2026-09-25T18:00:00.000Z",
+        "quality": false,
+        "qualityAt": "2026-09-25T18:00:00.000Z"
+      },
+      {
+        "agent": "codex",
+        "model": "gpt-6-sol",
+        "effort": "xhigh",
+        "difficulty": 2,
+        "reliability": true,
+        "reliabilityAt": "2026-09-25T18:00:00.000Z",
+        "quality": false,
+        "qualityAt": "2026-09-25T18:00:00.000Z"
+      },
+      {
+        "agent": "codex",
+        "model": "gpt-6-sol",
+        "effort": "xhigh",
+        "difficulty": 2,
+        "reliability": true,
+        "reliabilityAt": "2026-09-25T18:00:00.000Z",
+        "quality": false,
+        "qualityAt": "2026-09-25T18:00:00.000Z"
+      },
+      {
+        "agent": "codex",
+        "model": "gpt-6-sol",
+        "effort": "xhigh",
+        "difficulty": 2,
+        "reliability": true,
+        "reliabilityAt": "2026-09-25T18:00:00.000Z",
+        "quality": false,
+        "qualityAt": "2026-09-25T18:00:00.000Z"
+      }
+    ]
+  }
+]

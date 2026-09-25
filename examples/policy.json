@@ -1,0 +1,106 @@
+{
+  "quotaMaxAgeSeconds": 900,
+  "reservePercent": 20,
+  "learning": {
+    "enabled": true,
+    "halfLifeDays": 30,
+    "minSamples": 5,
+    "maxAdjustment": 12
+  },
+  "models": [
+    {
+      "agent": "codex",
+      "model": "gpt-6-astra",
+      "capability": 3,
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
+      "agent": "claude",
+      "model": "fable-5-1",
+      "capability": 3,
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
+      "agent": "codex",
+      "model": "gpt-6-sol",
+      "capability": 2,
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
+      "agent": "claude",
+      "model": "opus-5-5-1m",
+      "capability": 2,
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
+      "agent": "cursor",
+      "model": "grok-4.7",
+      "capability": 2,
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ]
+    },
+    {
+      "agent": "codex",
+      "model": "gpt-6-luna",
+      "capability": 1,
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
+      "agent": "claude",
+      "model": "sonnet-5-1m",
+      "capability": 1,
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
+      "agent": "cursor",
+      "model": "composer-2.5",
+      "capability": 1,
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ]
+    }
+  ]
+}
