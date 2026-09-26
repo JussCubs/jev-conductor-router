@@ -1,15 +1,17 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const cli = fileURLToPath(new URL("../src/cli.ts", import.meta.url));
+const tsxLoader = createRequire(import.meta.url).resolve("tsx");
 
 const run = (args: string[], cwd: string) => new Promise<{ code: number | null; stdout: string; stderr: string }>((resolve, reject) => {
-  const child = spawn(process.execPath, ["--import", "tsx", cli, ...args], {
+  const child = spawn(process.execPath, ["--import", tsxLoader, cli, ...args], {
     cwd,
     env: {
       PATH: process.env.PATH ?? "", HOME: process.env.HOME ?? "",
@@ -70,7 +72,7 @@ test("an explicit policy path overrides the package default", async () => {
 
 test("mcp mode starts without a policy file in the working directory", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "jev-cli-"));
-  const child = spawn(process.execPath, ["--import", "tsx", cli, "mcp"], {
+  const child = spawn(process.execPath, ["--import", tsxLoader, cli, "mcp"], {
     cwd,
     stdio: ["pipe", "pipe", "pipe"],
     env: {
