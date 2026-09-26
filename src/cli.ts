@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { DEFAULT_POLICY_PATH } from "./policy.js";
 import { createFromPlan, saveFeedback } from "./actions.js";
 import { accountKey } from "./account.js";
 import { ConductorClient } from "./conductor.js";
@@ -14,7 +14,7 @@ import { observeRun, readRuns, updateRuns } from "./store.js";
 
 loadLocalEnv();
 
-const defaultPolicy = fileURLToPath(new URL("../examples/policy.json", import.meta.url));
+const defaultPolicy = DEFAULT_POLICY_PATH;
 const { values: args, positionals } = parseArgs({ allowPositionals: true, options: {
   help: { type: "boolean", short: "h" },
   snapshot: { type: "string", default: "connections.json" }, policy: { type: "string", default: defaultPolicy },
@@ -57,7 +57,7 @@ Commands:
 
 Options:
   -h, --help                 Show this help
-  --snapshot <path>          Connections snapshot (default: connections.json)
+  --snapshot <path>          Connections snapshot (default: connections.json; when absent, models are read from Conductor)
   --policy <path>            Routing policy (default: examples/policy.json in this package)
   --state <path>             Learning state (default: .jev-router-state.json)
   --task-file <path>         Task brief for route and launch
@@ -93,13 +93,18 @@ async function main() {
     return;
   }
   if (!["route", "launch", "status", "feedback"].includes(command)) throw new Error("Commands: mcp, route, launch, status, feedback, evaluate. See README.md for flags.");
-  const snapshot = await json(args.snapshot);
-  const connections = validateConnections(snapshot.connections);
-  if (!snapshot.conductor?.userId || !snapshot.conductor?.organizationId) throw new Error("Snapshot must include the discovered Conductor owner and organization");
-  const account = accountKey(snapshot.conductor.organizationId, snapshot.conductor.userId);
-  const state = resolve(args.state);
+  // A discovery snapshot is optional. Without one, configured harnesses and
+  // models are read from Conductor at runtime and the key's identity is used.
+  let snapshot: any = null;
+  try { snapshot = await json(args.snapshot); }
+  catch (error: any) { if (error?.code !== "ENOENT") throw error; }
+  const connections = snapshot ? validateConnections(snapshot.connections) : undefined;
   const client = new ConductorClient();
-  if (command !== "route") {
+  const owner = snapshot ? snapshot.conductor : await client.me();
+  if (!owner?.userId || !owner?.organizationId) throw new Error(snapshot ? "Snapshot must include the discovered Conductor owner and organization" : "Conductor identity is incomplete");
+  const account = accountKey(owner.organizationId, owner.userId);
+  const state = resolve(args.state);
+  if (snapshot && command !== "route") {
     const identity = await client.me();
     if (identity.userId !== snapshot.conductor.userId || identity.organizationId !== snapshot.conductor.organizationId) throw new Error("Conductor key does not match this discovery snapshot");
   }
@@ -123,8 +128,8 @@ async function main() {
   const evidence = (await readRuns(state)).filter((row) => row.account === account);
   const plan = await planLaunch({ task, delegation: args.delegation, agent: args.agent, model: args.model, effort: args.effort, connections, policy, evidence });
   if (!plan.create) { print({ launched: false, delegation: plan.delegation }); return; }
-  if (!plan.route) throw new Error("No route. Refresh the discovery snapshot or pass --agent and --model.");
-  if (command === "route") { print({ delegation: plan.delegation, assessment: plan.assessment, ...plan.route }); return; }
+  if (!plan.route && !args.agent) throw new Error(`No route${plan.routeError ? `: ${plan.routeError}` : ""}. Pass --agent and --model.`);
+  if (command === "route") { print({ delegation: plan.delegation, assessment: plan.assessment, ...(plan.route ?? { agent: args.agent, model: args.model, effort: args.effort }), ...(plan.routeError ? { routeError: plan.routeError } : {}) }); return; }
   if (!args.project) throw new Error("Launch requires an exact Conductor --project ID");
   print(await createFromPlan(plan, { task, projectId: args.project, statePath: state, account, agent: args.agent, model: args.model, effort: args.effort }, client));
 }

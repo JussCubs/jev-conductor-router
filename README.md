@@ -146,7 +146,7 @@ node dist/cli.js route --task-file task.txt --snapshot connections.json
 node dist/cli.js launch --task-file task.txt --snapshot connections.json --project YOUR_PROJECT_ID
 ```
 
-`route` prints the decision. `launch` creates a real cloud workspace. `mcp` starts the stdio server and does not read the snapshot.
+`route` prints the decision. `launch` creates a real cloud workspace. `mcp` starts the stdio server and does not read the snapshot. The snapshot is optional: without `connections.json`, the CLI and the MCP server read configured harnesses and accepted models from Conductor at runtime.
 
 ## Environment
 
@@ -175,7 +175,7 @@ TypeSafe's native API receives `jev-1.13.0` when `JEV_MODEL` is the default `typ
 | Tool | What it does |
 | --- | --- |
 | `jev_decide` | Ask Jev a choice, score, or noul question. Defaults to the delegation and difficulty questions. |
-| `conductor_route` | Preview the gate, tier, harness, model, and effort. |
+| `conductor_route` | Preview the gate, tier, harness, model, and effort from Conductor's live model catalog. Returns `routeError` when no route exists. |
 | `conductor_create_workspace` | Run the Jev gate, then create a workspace when the gate passes. Sends `fastMode: false`. |
 | `conductor_start_session` | Start a session in an existing workspace. |
 | `conductor_send_message` | Send a follow-up to an existing session. |
@@ -196,7 +196,7 @@ Conductor 429 responses honor `Retry-After` (capped at 20 seconds) and retry up 
 1. Create an API key in Conductor and set `CONDUCTOR_API_KEY`.
 2. Add the repository to the Conductor cloud machine. This package does not change machine permissions.
 3. Configure the harness you want to run: Claude, Codex, or Cursor. ACP is accepted by the session API when you pass it explicitly.
-4. For quota-aware routing, produce a `connections.json` snapshot. Pass `--agent` and `--model` when you want a fixed choice and can skip the snapshot.
+4. Routing works without a snapshot: configured harnesses, models, and efforts are read from Conductor at runtime. For quota-aware routing, produce a `connections.json` snapshot. Pass `--agent` and `--model` when you want a fixed choice.
 
 The public routes used here are `POST /v0/workspaces`, `POST /v0/sessions`, `POST /v0/sessions/{id}/messages`, session and workspace status, cancel, archive, `GET /v0/projects`, `POST /v0/sql`, and `GET /me`. The contract is the live OpenAPI document at `https://api.conductor.build/v0/openapi.json`.
 
@@ -210,6 +210,10 @@ Discovery (`npm run discover`) is separate from routing. It runs only when `COND
 
 ## How a route is chosen
 
+Availability is read from Conductor at runtime, not from this repository. Without a snapshot, the router calls the `list_models` tool on Conductor's hosted MCP server (`https://api.conductor.build/mcp`) with your `CONDUCTOR_API_KEY`. That returns each agent's accepted models and efforts and whether its credentials are connected (`configured`). Only configured `claude`, `codex`, and `cursor` harnesses are routed, only models Conductor currently lists are eligible, and each model's efforts are narrowed to what Conductor accepts. The catalog is cached for five minutes. If `list_models` is unavailable, the public OpenAPI document supplies the model list with a warning that connection status is unknown. Conductor does not expose quota, so catalog routes rank every harness with the same unknown-quota score.
+
+`conductor_route` always returns either a `route` (agent, model, effort) or a `routeError` that says why none exists, plus an `availability` summary of what Conductor reported. The route is previewed even when the gate says direct; `wouldLaunch` is the gate decision. `conductor_create_workspace` reads the catalog only after the gate passes.
+
 1. Jev classifies difficulty. An invalid or unavailable decision uses a disclosed standard fallback. Frontier requires at least 65% probability. The probability mass decides the tier: 54% routine plus 45% standard stays standard.
 2. Filter by the discovered harnesses, model allowlists, explicit choices, capability floor, and known exhaustion. An explicit model is a constraint. It does not override a known exhausted allowance or a disabled connection.
 3. Rank eligible models by quota headroom and capability fit. Unknown quota and near-exhausted subscriptions are penalized. Every launch sends `fastMode: false`.
@@ -219,7 +223,7 @@ Unknown quota scores −35. Quota below the reserve threshold scores `−60 + re
 
 `composer-2.5` and Cursor `auto` have no effort parameter. Set `efforts: []` in the policy. The wire payload omits `effort`. Other launches still send `fastMode: false`.
 
-Review `examples/policy.json` against `conductor model --json`. Tiers are editorial policy (0 routine, 1 standard, 2 complex, 3 frontier), not benchmark scores. Models missing from the snapshot cannot be selected.
+Review `examples/policy.json` against `conductor model --json`. Tiers are editorial policy (0 routine, 1 standard, 2 complex, 3 frontier), not benchmark scores. Models missing from the snapshot or from Conductor's live catalog cannot be selected. Catalog models the policy has not ranked are listed as `unrankedModels`; an explicit `model` that Conductor accepts still routes.
 
 ## Learning
 

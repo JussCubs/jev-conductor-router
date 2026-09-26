@@ -47,7 +47,7 @@ export function createMcpServer(env: NodeJS.ProcessEnv = process.env) {
 
   server.registerTool("conductor_route", {
     title: "Preview a Conductor route",
-    description: "Assess whether a task needs Conductor and which harness, model, and effort would be used. This never launches a workspace.",
+    description: "Assess whether a task needs Conductor and which harness (agent), model, and effort would be used. Configured harnesses and accepted models are read from Conductor at runtime unless a connections snapshot is passed. Returns route, or routeError explaining why no route exists. This never launches a workspace.",
     inputSchema: {
       task: z.string().min(1),
       delegation: z.enum(["auto", "conductor"]).optional(),
@@ -71,7 +71,7 @@ export function createMcpServer(env: NodeJS.ProcessEnv = process.env) {
 
   server.registerTool("conductor_create_workspace", {
     title: "Create a Conductor workspace",
-    description: "Run the Jev gate first. Launch only when conductor probability is at least 0.65, or when delegation is conductor because the user explicitly asked. If difficulty classification fails, route at the standard tier. Never sends secrets in workspace env. Sends fastMode false.",
+    description: "Run the Jev gate first. Launch only when conductor probability is at least 0.65, or when delegation is conductor because the user explicitly asked. The harness, model and effort come from Conductor's live model catalog and the routing policy unless agent and model are passed. If difficulty classification fails, route at the standard tier. Never sends secrets in workspace env. Sends fastMode false.",
     inputSchema: {
       task: z.string().min(1),
       projectId: z.string().optional(), repositoryUrl: z.string().optional(), branch: z.string().optional(),
