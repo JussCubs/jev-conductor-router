@@ -48,7 +48,7 @@ Pass `delegation: "conductor"` only for an explicit user request. That bypasses 
 
 ## Tools
 
-Prefer the MCP server (`npx -y github:JussCubs/jev-conductor-router mcp`) when the client can start it. That GitHub spec is the install path before the package is on npm. Otherwise use the CLI.
+Prefer the MCP server (`npx -y jev-conductor-router mcp`) when the client can start it. Otherwise use the CLI.
 
 - `jev_decide` classifies a task and does not launch.
 - `conductor_route` previews the gate, tier, harness, model, and effort. It never launches.
@@ -71,9 +71,9 @@ This package only talks to Conductor cloud workspaces. It does not start a local
 ## CLI
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
-npx -y github:JussCubs/jev-conductor-router route --task-file task.txt --snapshot connections.json
-npx -y github:JussCubs/jev-conductor-router launch --task-file task.txt --snapshot connections.json --project PROJECT_ID
+npx -y jev-conductor-router mcp
+npx -y jev-conductor-router route --task-file task.txt --snapshot connections.json
+npx -y jev-conductor-router launch --task-file task.txt --snapshot connections.json --project PROJECT_ID
 ```
 
 `route` never launches. `launch` does.

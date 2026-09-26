@@ -1,14 +1,16 @@
 # Conductor Jev Router
 
+[![npm](https://img.shields.io/npm/v/jev-conductor-router)](https://www.npmjs.com/package/jev-conductor-router)
+
 Decide with [Jev](https://docs.typesafe.ai/api) whether a coding task needs a [Conductor](https://conductor.build) cloud workspace, how hard it is, and which harness and model should run it. Then call Conductor's public API.
 
 The same package is a stdio MCP server and a small CLI. Any agent client that can start a local process can install it. You bring your own keys. Nothing in this repository calls home, and no key is bundled.
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
+npx -y jev-conductor-router mcp
 ```
 
-Node.js 20 or newer. MIT licensed. That command is the install path before the package is on npm. `prepare` compiles `dist/` during the git install, so the `jev-conductor-router` bin exists. After `npm publish`, `npx -y jev-conductor-router mcp` is the same server.
+Node.js 20 or newer. MIT licensed. To run the git tree instead of the published package, use `npx -y github:JussCubs/jev-conductor-router mcp`. That git install runs `prepare`, which compiles `dist/` so the `jev-conductor-router` bin exists.
 
 ## 60-second quickstart
 
@@ -17,7 +19,7 @@ Set `CONDUCTOR_API_KEY` and at least one Jev key (`ORBIO_API_KEY`, `OPENROUTER_A
 ### Generic MCP JSON
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
+npx -y jev-conductor-router mcp
 ```
 
 ```json
@@ -25,7 +27,7 @@ npx -y github:JussCubs/jev-conductor-router mcp
   "mcpServers": {
     "jev-conductor-router": {
       "command": "npx",
-      "args": ["-y", "github:JussCubs/jev-conductor-router", "mcp"],
+      "args": ["-y", "jev-conductor-router", "mcp"],
       "env": {
         "CONDUCTOR_API_KEY": "paste-your-key",
         "ORBIO_API_KEY": "paste-your-key"
@@ -40,10 +42,10 @@ Omit any Jev key you do not have. Restart the client after saving.
 ### Grok Bot
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
+npx -y jev-conductor-router mcp
 ```
 
-This repo is a Grok plugin. `.grok-plugin/plugin.json` points at the skill and `.mcp.json`, and that MCP file uses the GitHub `npx` command above. Grok also reads the Claude Code layout.
+This repo is a Grok plugin. `.grok-plugin/plugin.json` points at the skill and `.mcp.json`, and that MCP file uses the npm package command above. Grok also reads the Claude Code layout.
 
 ```sh
 grok --plugin-dir /path/to/jev-conductor-router
@@ -54,10 +56,10 @@ Or add the directory under `[plugins] paths` in `~/.grok/config.toml`, then enab
 ### Claude Code
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
+npx -y jev-conductor-router mcp
 ```
 
-The repo is its own marketplace. Root `.mcp.json` starts the server with that GitHub spec.
+The repo is its own marketplace. Root `.mcp.json` starts the server with that npm package.
 
 ```sh
 claude plugin marketplace add /path/to/jev-conductor-router
@@ -69,7 +71,7 @@ Claude also reads `skills/conductor-jev-router/SKILL.md`.
 ### Cursor
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
+npx -y jev-conductor-router mcp
 ```
 
 Add the generic MCP block in Cursor Settings → MCP, or open this repo as a plugin (`.cursor-plugin/plugin.json` points at `.mcp.json` and the skill).
@@ -77,10 +79,10 @@ Add the generic MCP block in Cursor Settings → MCP, or open this repo as a plu
 ### Codex
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
+npx -y jev-conductor-router mcp
 ```
 
-Open the repo in Codex. The marketplace catalog is `.agents/plugins/marketplace.json` and the portable manifest is root `plugin.json` (`extensions.com.openai` plus `mcp.json`). Both MCP configs use the GitHub spec. Restart the ChatGPT desktop app, then install **Conductor Jev Router** from that local marketplace. From the CLI:
+Open the repo in Codex. The marketplace catalog is `.agents/plugins/marketplace.json` and the portable manifest is root `plugin.json` (`extensions.com.openai` plus `mcp.json`). Both MCP configs use the npm package. Restart the ChatGPT desktop app, then install **Conductor Jev Router** from that local marketplace. From the CLI:
 
 ```sh
 codex plugin marketplace add /path/to/jev-conductor-router
@@ -91,7 +93,7 @@ Install the plugin from the Plugins Directory. The public Codex directory expect
 ### OpenClaw
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
+npx -y jev-conductor-router mcp
 ```
 
 The skill at `skills/conductor-jev-router/SKILL.md` includes `metadata.openclaw`. Point OpenClaw at that directory, or publish it later with ClawHub (commands are in the publishing doc; this repo does not publish).
@@ -99,7 +101,7 @@ The skill at `skills/conductor-jev-router/SKILL.md` includes `metadata.openclaw`
 ### Muse Code
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
+npx -y jev-conductor-router mcp
 ```
 
 Muse reads `.agents/skills/conductor-jev-router` (a link to the same skill). Trust the workspace, then ask Muse to route a task. Muse uses the skill instructions. It does not start the MCP server by itself; add the generic MCP block if your Muse build accepts MCP config.
@@ -107,10 +109,10 @@ Muse reads `.agents/skills/conductor-jev-router` (a link to the same skill). Tru
 ### Gemini CLI
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
+npx -y jev-conductor-router mcp
 ```
 
-`gemini-extension.json` is at the repo root and starts the server with that GitHub spec.
+`gemini-extension.json` is at the repo root and starts the server with that npm package.
 
 ```sh
 gemini extensions install /path/to/jev-conductor-router --consent
@@ -121,7 +123,7 @@ Restart Gemini CLI. `GEMINI.md` tells the model to preview a route before creati
 ### Cline
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
+npx -y jev-conductor-router mcp
 ```
 
 Follow [llms-install.md](llms-install.md) and paste the `mcpServers` block into `cline_mcp_settings.json`.
@@ -129,7 +131,7 @@ Follow [llms-install.md](llms-install.md) and paste the `mcpServers` block into 
 ### CLI
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
+npx -y jev-conductor-router mcp
 ```
 
 From a clone, `npm ci` runs `prepare` and writes `dist/`:

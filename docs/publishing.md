@@ -1,14 +1,14 @@
 # Publishing
 
-These steps are for a human maintainer. This repository does not publish to npm, the MCP registry, ClawHub, Smithery, or any plugin marketplace, and it does not create releases or tags.
+These steps are for a human maintainer. The npm package `jev-conductor-router` is published. This repository does not publish to the MCP registry, ClawHub, Smithery, or any plugin marketplace from CI, and it does not create releases or tags.
 
-Every manifest in the repo is version `0.2.0` and must stay aligned with `package.json`. Bump them together.
+Every manifest in the repo is version `0.2.1` and must stay aligned with `package.json`. Bump them together.
 
 Users supply `CONDUCTOR_API_KEY` and their Jev keys at install time. Do not put key values in a manifest, a marketplace PR, or a release.
 
 ## npm
 
-The package name is the unscoped `jev-conductor-router`, so `npx -y jev-conductor-router mcp` resolves after publish. Before that, clients use `npx -y github:JussCubs/jev-conductor-router mcp`. `prepare` compiles `dist/` on git installs (npm installs the TypeScript devDependency first; if a host omitted it, `scripts/prepare.mjs` installs the compiler without saving it). `prepublishOnly` also runs `npm run build`. The tarball contains `dist`, `src/discover.mjs`, `README.md`, `LICENSE`, and `examples`. Node.js 20 or newer.
+The package name is the unscoped `jev-conductor-router`. Install the published server with `npx -y jev-conductor-router mcp`. `npx -y github:JussCubs/jev-conductor-router mcp` remains a git-install alternative. `prepare` compiles `dist/` on git installs (npm installs the TypeScript devDependency first; if a host omitted it, `scripts/prepare.mjs` installs the compiler without saving it). `prepublishOnly` also runs `npm run build`. The tarball contains `dist`, `src/discover.mjs`, `README.md`, `LICENSE`, and `examples`. Node.js 20 or newer. The package is on npm at <https://www.npmjs.com/package/jev-conductor-router> (`0.2.0` is the published release). Repo manifests are `0.2.1`.
 
 ```sh
 npm run lint
@@ -18,11 +18,11 @@ npm login
 npm publish --access public
 ```
 
-Confirm `https://www.npmjs.com/package/jev-conductor-router` shows `0.2.0` before any registry that checks npm ownership.
+After the next publish, confirm <https://www.npmjs.com/package/jev-conductor-router> shows `0.2.1` before any registry that checks npm ownership and that the npm version matches `server.json`.
 
 ## Official MCP Registry
 
-`server.json` name `io.github.jusscubs/jev-conductor-router` matches `package.json` `mcpName`. The npm package version matches `server.json` `version`. Secret env vars set `isSecret: true`. `packageArguments` passes `mcp` so a registry client starts the stdio server.
+MCP Registry name: `io.github.jusscubs/jev-conductor-router`. That `server.json` name matches `package.json` `mcpName`. The npm package version matches `server.json` `version`. Secret env vars set `isSecret: true`. `packageArguments` passes `mcp` so a registry client starts the stdio server.
 
 Install the publisher from [modelcontextprotocol/registry](https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/cli/commands.md), then:
 
@@ -72,13 +72,13 @@ The official community catalog is a human submission. Follow the current form at
 
 Local check, using the template validator's rules: the name is kebab-case, the skill directory contains `SKILL.md`, and the MCP file exists.
 
-Submission, from the [cursor/plugin-template](https://github.com/cursor/plugin-template) checklist: send the repository link to the Cursor team on Slack or by email to `kniparko@anysphere.com`. There is no public POST endpoint in that template.
+Submit the repository at <https://cursor.directory/plugins/new> (GitHub sign-in, then paste `https://github.com/JussCubs/jev-conductor-router`) and through the official application at <https://cursor.com/marketplace/publish>.
 
 ## Grok Bot / xAI
 
 Plugin metadata is `.grok-plugin/plugin.json` (`name`, `version`, `description`, `author`, `logo`, `skills`, `mcpServers`). Grok also discovers `skills/` and root `.mcp.json` without that file. Docs: <https://docs.x.ai/build/features/skills-plugins-marketplaces>.
 
-Do not submit from this repo. A maintainer forks [xai-org/plugin-marketplace](https://github.com/xai-org/plugin-marketplace) and adds this entry to `.grok-plugin/marketplace.json`. Replace the SHA with the full 40-character commit you intend to ship (`git rev-parse HEAD` on that commit):
+The catalog pull request is [xai-org/plugin-marketplace#946](https://github.com/xai-org/plugin-marketplace/pull/946). It pins source SHA `c1f1911460c291a2470d90def1e89e0f69f0ad64`. A maintainer updates that fork of [xai-org/plugin-marketplace](https://github.com/xai-org/plugin-marketplace) when the pin should move. Replace the SHA with the full 40-character commit you intend to ship (`git rev-parse HEAD` on that commit):
 
 ```json
 {
@@ -91,7 +91,7 @@ Do not submit from this repo. A maintainer forks [xai-org/plugin-marketplace](ht
     "sha": "REPLACE_WITH_FULL_COMMIT_SHA"
   },
   "homepage": "https://github.com/JussCubs/jev-conductor-router",
-  "keywords": ["conductor", "jev", "routing", "mcp"],
+  "keywords": ["conductor", "jev", "typesafe", "orbio"],
   "domains": ["conductor.build", "api.conductor.build"]
 }
 ```
@@ -103,7 +103,7 @@ python3 scripts/generate-plugin-index.py
 python3 scripts/validate-catalog.py
 ```
 
-Open a pull request. CI runs `python3 scripts/generate-plugin-index.py --check`. Remote entries must pin a full lowercase SHA. Grok verifies `git rev-parse HEAD` after clone.
+Push that SHA change to [pull request #946](https://github.com/xai-org/plugin-marketplace/pull/946). CI runs `python3 scripts/generate-plugin-index.py --check`. Remote entries must pin a full lowercase SHA. Grok verifies `git rev-parse HEAD` after clone.
 
 Local install without the catalog:
 
@@ -137,7 +137,7 @@ One skill, two paths:
 
 Frontmatter `name` is `conductor-jev-router` and matches the directory. `metadata.openclaw` declares the Conductor key and the optional Jev keys for ClawHub.
 
-ClawHub, when a maintainer is ready:
+ClawHub slug: `conductor-jev-router`. When a maintainer is ready:
 
 ```sh
 npm i -g clawhub
@@ -182,4 +182,4 @@ Reference: <https://geminicli.com/docs/extensions/reference/>. The gallery listi
 
 ## Cline
 
-[llms-install.md](../llms-install.md) is the install card. The Cline marketplace is a human pull request to [cline/mcp-marketplace](https://github.com/cline/mcp-marketplace) that includes this install card. Open that PR from a fork. Do not send API keys in the PR body.
+[llms-install.md](../llms-install.md) is the install card. The Cline marketplace is a human pull request to [cline/mcp-marketplace](https://github.com/cline/mcp-marketplace) that includes this install card and the 400×400 logo at [assets/logo-400.png](../assets/logo-400.png) (rendered from `assets/logo.svg`). Open that PR from a fork. Do not send API keys in the PR body.
