@@ -6,7 +6,7 @@
   "license": "MIT",
   "mcpName": "io.github.jusscubs/jev-conductor-router",
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
   },
   "repository": {
     "type": "git",
@@ -45,6 +45,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit && node scripts/check-manifests.mjs",
     "test": "tsx --test test/*.test.ts",
+    "prepare": "node scripts/prepare.mjs",
     "prepublishOnly": "npm run build",
     "route": "tsx src/cli.ts route",
     "discover": "node src/discover.mjs",

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { resolve } from "node:path";
@@ -10,7 +11,7 @@ import { selectRoute, validateConnections, validatePolicy } from "./router.js";
 import { startMcpServer } from "./mcp.js";
 import { observeRun, readRuns, updateRuns } from "./store.js";
 
-try { process.loadEnvFile(); } catch (e: any) { if (e.code !== "ENOENT") throw e; }
+loadLocalEnv();
 
 const { values: args, positionals } = parseArgs({ allowPositionals: true, options: {
   snapshot: { type: "string", default: "connections.json" }, policy: { type: "string", default: "examples/policy.json" },
@@ -19,6 +20,26 @@ const { values: args, positionals } = parseArgs({ allowPositionals: true, option
   project: { type: "string" }, agent: { type: "string" }, model: { type: "string" }, effort: { type: "string" },
   session: { type: "string" }, success: { type: "string" }, dataset: { type: "string" },
 } });
+function loadLocalEnv() {
+  if (typeof process.loadEnvFile === "function") {
+    try { process.loadEnvFile(); } catch (error: any) { if (error?.code !== "ENOENT") throw error; }
+    return;
+  }
+  let text: string;
+  try { text = readFileSync(".env", "utf8"); } catch (error: any) { if (error?.code !== "ENOENT") throw error; return; }
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    const body = line.startsWith("export ") ? line.slice(7).trim() : line;
+    const eq = body.indexOf("=");
+    if (eq <= 0) continue;
+    const key = body.slice(0, eq).trim();
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key) || process.env[key] !== undefined) continue;
+    let value = body.slice(eq + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) value = value.slice(1, -1);
+    process.env[key] = value;
+  }
+}
 const json = async (path: string) => JSON.parse(await readFile(path, "utf8"));
 const print = (value: unknown) => console.log(JSON.stringify(value, null, 2));
 

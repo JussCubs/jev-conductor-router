@@ -11,8 +11,9 @@ const pkg = json("../package.json");
 test("package metadata is ready to publish without publishing", () => {
   assert.equal(pkg.name, "jev-conductor-router");
   assert.equal(pkg.mcpName, "io.github.jusscubs/jev-conductor-router");
-  assert.equal(pkg.engines.node, ">=22");
+  assert.equal(pkg.engines.node, ">=20");
   assert.equal(pkg.bin["jev-conductor-router"], "./dist/cli.js");
+  assert.equal(pkg.scripts.prepare, "node scripts/prepare.mjs");
   assert.equal(pkg.scripts.prepublishOnly, "npm run build");
   assert.equal(pkg.scripts.build, "tsc");
   assert.equal(pkg.scripts.typecheck, "tsc --noEmit");
@@ -35,7 +36,9 @@ test("marketplace manifests point at the stdio server and the skill", () => {
   assert.equal(plugin.name, "jev-conductor-router");
   assert.equal(plugin.extensions["com.openai"].interface.logo, "./assets/logo.svg");
   assert.equal(mcp.$schema, "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json");
-  assert.deepEqual(mcp.mcpServers["jev-conductor-router"].args, ["-y", "jev-conductor-router", "mcp"]);
+  assert.deepEqual(mcp.mcpServers["jev-conductor-router"].args, ["-y", "github:JussCubs/jev-conductor-router", "mcp"]);
+  assert.match(read("../README.md"), /npx -y github:JussCubs\/jev-conductor-router mcp/);
+  assert.match(read("../llms-install.md"), /npx -y github:JussCubs\/jev-conductor-router mcp/);
   assert.equal(mcp.mcpServers["jev-conductor-router"].type, "stdio");
   assert.equal(claude.mcpServers["jev-conductor-router"].command, "npx");
   assert.equal(cursor.name, plugin.name);

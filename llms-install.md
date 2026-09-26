@@ -4,7 +4,7 @@ Follow this file exactly. Do not publish, deploy, or invent API keys.
 
 ## Requirements
 
-- Node.js 22 or newer
+- Node.js 20 or newer
 - A Conductor API key from the user's Conductor account
 - At least one Jev key: Orbio, OpenRouter, or TypeSafe
 - The repository already added to the user's Conductor cloud machine
@@ -14,6 +14,12 @@ This server only controls Conductor cloud workspaces. It does not start a local 
 
 ## Stdio config
 
+Before the package is on npm, start it from GitHub. `prepare` builds `dist/` during that install:
+
+```sh
+npx -y github:JussCubs/jev-conductor-router mcp
+```
+
 Add this block to Cline's MCP settings (`cline_mcp_settings.json`). The `mcpServers` object is the root of that file. Put the user's keys in `env`. Do not commit those keys.
 
 ```json
@@ -21,7 +27,7 @@ Add this block to Cline's MCP settings (`cline_mcp_settings.json`). The `mcpServ
   "mcpServers": {
     "jev-conductor-router": {
       "command": "npx",
-      "args": ["-y", "jev-conductor-router", "mcp"],
+      "args": ["-y", "github:JussCubs/jev-conductor-router", "mcp"],
       "env": {
         "CONDUCTOR_API_KEY": "PASTE_USER_CONDUCTOR_KEY",
         "ORBIO_API_KEY": "PASTE_USER_ORBIO_KEY_OR_OMIT",

@@ -2,7 +2,7 @@
 name: conductor-jev-router
 description: Decide with Jev whether a coding task needs a Conductor cloud workspace, route a harness and model, and operate that workspace. Use when the user asks for Conductor, a cloud coding agent, or a routed launch of repository work.
 license: MIT
-compatibility: Node.js 22 or newer, user-supplied API keys, and a Conductor cloud workspace. Does not run local sandboxes.
+compatibility: Node.js 20 or newer, user-supplied API keys, and a Conductor cloud workspace. Does not run local sandboxes.
 metadata:
   openclaw:
     emoji: "🛤️"
@@ -48,7 +48,7 @@ Pass `delegation: "conductor"` only for an explicit user request. That bypasses 
 
 ## Tools
 
-Prefer the MCP server (`npx -y jev-conductor-router mcp`) when the client can start it. Otherwise use the CLI.
+Prefer the MCP server (`npx -y github:JussCubs/jev-conductor-router mcp`) when the client can start it. That GitHub spec is the install path before the package is on npm. Otherwise use the CLI.
 
 - `jev_decide` classifies a task and does not launch.
 - `conductor_route` previews the gate, tier, harness, model, and effort. It never launches.
@@ -71,8 +71,9 @@ This package only talks to Conductor cloud workspaces. It does not start a local
 ## CLI
 
 ```sh
-npx -y jev-conductor-router route --task-file task.txt --snapshot connections.json
-npx -y jev-conductor-router launch --task-file task.txt --snapshot connections.json --project PROJECT_ID
+npx -y github:JussCubs/jev-conductor-router mcp
+npx -y github:JussCubs/jev-conductor-router route --task-file task.txt --snapshot connections.json
+npx -y github:JussCubs/jev-conductor-router launch --task-file task.txt --snapshot connections.json --project PROJECT_ID
 ```
 
 `route` never launches. `launch` does.

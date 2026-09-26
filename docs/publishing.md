@@ -8,7 +8,7 @@ Users supply `CONDUCTOR_API_KEY` and their Jev keys at install time. Do not put 
 
 ## npm
 
-The package name is the unscoped `jev-conductor-router`, so `npx -y jev-conductor-router mcp` resolves. `prepublishOnly` runs `npm run build`. The tarball contains `dist`, `src/discover.mjs`, `README.md`, `LICENSE`, and `examples`.
+The package name is the unscoped `jev-conductor-router`, so `npx -y jev-conductor-router mcp` resolves after publish. Before that, clients use `npx -y github:JussCubs/jev-conductor-router mcp`. `prepare` compiles `dist/` on git installs (npm installs the TypeScript devDependency first; if a host omitted it, `scripts/prepare.mjs` installs the compiler without saving it). `prepublishOnly` also runs `npm run build`. The tarball contains `dist`, `src/discover.mjs`, `README.md`, `LICENSE`, and `examples`. Node.js 20 or newer.
 
 ```sh
 npm run lint

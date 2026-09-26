@@ -5,25 +5,27 @@ Decide with [Jev](https://docs.typesafe.ai/api) whether a coding task needs a [C
 The same package is a stdio MCP server and a small CLI. Any agent client that can start a local process can install it. You bring your own keys. Nothing in this repository calls home, and no key is bundled.
 
 ```sh
-npx -y jev-conductor-router mcp
+npx -y github:JussCubs/jev-conductor-router mcp
 ```
 
-Node.js 22 or newer. MIT licensed.
+Node.js 20 or newer. MIT licensed. That command is the install path before the package is on npm. `prepare` compiles `dist/` during the git install, so the `jev-conductor-router` bin exists. After `npm publish`, `npx -y jev-conductor-router mcp` is the same server.
 
 ## 60-second quickstart
 
 Set `CONDUCTOR_API_KEY` and at least one Jev key (`ORBIO_API_KEY`, `OPENROUTER_API_KEY`, or `TYPESAFE_API_KEY`) in the environment that starts the process. The default provider chain is Orbio, then OpenRouter, then TypeSafe, using only the keys that are set.
 
-Until this package is on npm, clone the repo, run `npm ci && npm run build`, and use `node dist/cli.js mcp` in place of the `npx` command below.
-
 ### Generic MCP JSON
+
+```sh
+npx -y github:JussCubs/jev-conductor-router mcp
+```
 
 ```json
 {
   "mcpServers": {
     "jev-conductor-router": {
       "command": "npx",
-      "args": ["-y", "jev-conductor-router", "mcp"],
+      "args": ["-y", "github:JussCubs/jev-conductor-router", "mcp"],
       "env": {
         "CONDUCTOR_API_KEY": "paste-your-key",
         "ORBIO_API_KEY": "paste-your-key"
@@ -37,7 +39,11 @@ Omit any Jev key you do not have. Restart the client after saving.
 
 ### Grok Bot
 
-This repo is a Grok plugin. `.grok-plugin/plugin.json` points at the skill and `.mcp.json`. Grok also reads the Claude Code layout.
+```sh
+npx -y github:JussCubs/jev-conductor-router mcp
+```
+
+This repo is a Grok plugin. `.grok-plugin/plugin.json` points at the skill and `.mcp.json`, and that MCP file uses the GitHub `npx` command above. Grok also reads the Claude Code layout.
 
 ```sh
 grok --plugin-dir /path/to/jev-conductor-router
@@ -47,22 +53,34 @@ Or add the directory under `[plugins] paths` in `~/.grok/config.toml`, then enab
 
 ### Claude Code
 
-The repo is its own marketplace.
+```sh
+npx -y github:JussCubs/jev-conductor-router mcp
+```
+
+The repo is its own marketplace. Root `.mcp.json` starts the server with that GitHub spec.
 
 ```sh
 claude plugin marketplace add /path/to/jev-conductor-router
 claude plugin install jev-conductor-router@jev-conductor-router
 ```
 
-Claude reads root `.mcp.json` and `skills/conductor-jev-router/SKILL.md`.
+Claude also reads `skills/conductor-jev-router/SKILL.md`.
 
 ### Cursor
+
+```sh
+npx -y github:JussCubs/jev-conductor-router mcp
+```
 
 Add the generic MCP block in Cursor Settings → MCP, or open this repo as a plugin (`.cursor-plugin/plugin.json` points at `.mcp.json` and the skill).
 
 ### Codex
 
-Open the repo in Codex. The marketplace catalog is `.agents/plugins/marketplace.json` and the portable manifest is root `plugin.json` (`extensions.com.openai` plus `mcp.json`). Restart the ChatGPT desktop app, then install **Conductor Jev Router** from that local marketplace. From the CLI:
+```sh
+npx -y github:JussCubs/jev-conductor-router mcp
+```
+
+Open the repo in Codex. The marketplace catalog is `.agents/plugins/marketplace.json` and the portable manifest is root `plugin.json` (`extensions.com.openai` plus `mcp.json`). Both MCP configs use the GitHub spec. Restart the ChatGPT desktop app, then install **Conductor Jev Router** from that local marketplace. From the CLI:
 
 ```sh
 codex plugin marketplace add /path/to/jev-conductor-router
@@ -72,15 +90,27 @@ Install the plugin from the Plugins Directory. The public Codex directory expect
 
 ### OpenClaw
 
+```sh
+npx -y github:JussCubs/jev-conductor-router mcp
+```
+
 The skill at `skills/conductor-jev-router/SKILL.md` includes `metadata.openclaw`. Point OpenClaw at that directory, or publish it later with ClawHub (commands are in the publishing doc; this repo does not publish).
 
 ### Muse Code
+
+```sh
+npx -y github:JussCubs/jev-conductor-router mcp
+```
 
 Muse reads `.agents/skills/conductor-jev-router` (a link to the same skill). Trust the workspace, then ask Muse to route a task. Muse uses the skill instructions. It does not start the MCP server by itself; add the generic MCP block if your Muse build accepts MCP config.
 
 ### Gemini CLI
 
-`gemini-extension.json` is at the repo root.
+```sh
+npx -y github:JussCubs/jev-conductor-router mcp
+```
+
+`gemini-extension.json` is at the repo root and starts the server with that GitHub spec.
 
 ```sh
 gemini extensions install /path/to/jev-conductor-router --consent
@@ -90,15 +120,24 @@ Restart Gemini CLI. `GEMINI.md` tells the model to preview a route before creati
 
 ### Cline
 
+```sh
+npx -y github:JussCubs/jev-conductor-router mcp
+```
+
 Follow [llms-install.md](llms-install.md) and paste the `mcpServers` block into `cline_mcp_settings.json`.
 
 ### CLI
 
 ```sh
+npx -y github:JussCubs/jev-conductor-router mcp
+```
+
+From a clone, `npm ci` runs `prepare` and writes `dist/`:
+
+```sh
 git clone https://github.com/JussCubs/jev-conductor-router.git
 cd jev-conductor-router
 npm ci
-npm run build
 cp .env.example .env
 printf 'Fix the misspelled heading on the homepage. Run its existing checks.\n' > task.txt
 node dist/cli.js route --task-file task.txt --snapshot connections.json

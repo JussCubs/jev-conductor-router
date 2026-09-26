@@ -4,7 +4,7 @@
     "jev-conductor-router": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "jev-conductor-router", "mcp"]
+      "args": ["-y", "github:JussCubs/jev-conductor-router", "mcp"]
     }
   }
 }
