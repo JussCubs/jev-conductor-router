@@ -1,18 +1,36 @@
 {
   "name": "jev-conductor-router",
-  "version": "0.1.1",
-  "description": "Task, quota and outcome-aware Conductor routing with Jev",
+  "version": "0.2.0",
+  "description": "Jev-gated Conductor cloud workspace router and stdio MCP server",
   "type": "module",
   "license": "MIT",
+  "mcpName": "io.github.jusscubs/jev-conductor-router",
   "engines": {
     "node": ">=22"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JussCubs/jev-conductor-router.git"
+  },
+  "homepage": "https://github.com/JussCubs/jev-conductor-router#readme",
+  "bugs": {
+    "url": "https://github.com/JussCubs/jev-conductor-router/issues"
+  },
+  "keywords": [
+    "conductor",
+    "jev",
+    "mcp",
+    "routing",
+    "agent"
+  ],
   "exports": {
     ".": "./dist/router.js",
     "./jev": "./dist/jev.js",
-    "./learning": "./dist/learning.js"
+    "./learning": "./dist/learning.js",
+    "./conductor": "./dist/conductor.js"
   },
   "bin": {
+    "jev-conductor-router": "./dist/cli.js",
     "jev-conductor": "./dist/cli.js"
   },
   "files": [
@@ -24,10 +42,17 @@
   ],
   "scripts": {
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit && node scripts/check-manifests.mjs",
     "test": "tsx --test test/*.test.ts",
+    "prepublishOnly": "npm run build",
     "route": "tsx src/cli.ts route",
     "discover": "node src/discover.mjs",
     "evaluate": "tsx src/cli.ts evaluate"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.1",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

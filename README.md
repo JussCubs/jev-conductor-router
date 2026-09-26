@@ -1,14 +1,98 @@
-# Jev Conductor Router
+# Conductor Jev Router
 
-Route a coding task to a Conductor harness, model and reasoning effort using
-Jev delegation and task assessment, discovered account quota and bounded outcome learning.
-Every launch explicitly sends `fastMode: false`.
+Decide with [Jev](https://docs.typesafe.ai/api) whether a coding task needs a [Conductor](https://conductor.build) cloud workspace, how hard it is, and which harness and model should run it. Then call Conductor's public API.
 
-This is a standalone routing package: no application backend, database service,
-private product code, telemetry collector, or hosted routing dependency. Node 22+
-is required. Runtime dependencies: none. MIT licensed.
+The same package is a stdio MCP server and a small CLI. Any agent client that can start a local process can install it. You bring your own keys. Nothing in this repository calls home, and no key is bundled.
 
-## Quick start
+```sh
+npx -y jev-conductor-router mcp
+```
+
+Node.js 22 or newer. MIT licensed.
+
+## 60-second quickstart
+
+Set `CONDUCTOR_API_KEY` and at least one Jev key (`ORBIO_API_KEY`, `OPENROUTER_API_KEY`, or `TYPESAFE_API_KEY`) in the environment that starts the process. The default provider chain is Orbio, then OpenRouter, then TypeSafe, using only the keys that are set.
+
+Until this package is on npm, clone the repo, run `npm ci && npm run build`, and use `node dist/cli.js mcp` in place of the `npx` command below.
+
+### Generic MCP JSON
+
+```json
+{
+  "mcpServers": {
+    "jev-conductor-router": {
+      "command": "npx",
+      "args": ["-y", "jev-conductor-router", "mcp"],
+      "env": {
+        "CONDUCTOR_API_KEY": "paste-your-key",
+        "ORBIO_API_KEY": "paste-your-key"
+      }
+    }
+  }
+}
+```
+
+Omit any Jev key you do not have. Restart the client after saving.
+
+### Grok Bot
+
+This repo is a Grok plugin. `.grok-plugin/plugin.json` points at the skill and `.mcp.json`. Grok also reads the Claude Code layout.
+
+```sh
+grok --plugin-dir /path/to/jev-conductor-router
+```
+
+Or add the directory under `[plugins] paths` in `~/.grok/config.toml`, then enable it from `/plugins`. Put the API keys in the environment Grok uses to start MCP servers.
+
+### Claude Code
+
+The repo is its own marketplace.
+
+```sh
+claude plugin marketplace add /path/to/jev-conductor-router
+claude plugin install jev-conductor-router@jev-conductor-router
+```
+
+Claude reads root `.mcp.json` and `skills/conductor-jev-router/SKILL.md`.
+
+### Cursor
+
+Add the generic MCP block in Cursor Settings → MCP, or open this repo as a plugin (`.cursor-plugin/plugin.json` points at `.mcp.json` and the skill).
+
+### Codex
+
+Open the repo in Codex. The marketplace catalog is `.agents/plugins/marketplace.json` and the portable manifest is root `plugin.json` (`extensions.com.openai` plus `mcp.json`). Restart the ChatGPT desktop app, then install **Conductor Jev Router** from that local marketplace. From the CLI:
+
+```sh
+codex plugin marketplace add /path/to/jev-conductor-router
+```
+
+Install the plugin from the Plugins Directory. The public Codex directory expects a remote HTTPS MCP server; this package is local stdio. See [docs/publishing.md](docs/publishing.md).
+
+### OpenClaw
+
+The skill at `skills/conductor-jev-router/SKILL.md` includes `metadata.openclaw`. Point OpenClaw at that directory, or publish it later with ClawHub (commands are in the publishing doc; this repo does not publish).
+
+### Muse Code
+
+Muse reads `.agents/skills/conductor-jev-router` (a link to the same skill). Trust the workspace, then ask Muse to route a task. Muse uses the skill instructions. It does not start the MCP server by itself; add the generic MCP block if your Muse build accepts MCP config.
+
+### Gemini CLI
+
+`gemini-extension.json` is at the repo root.
+
+```sh
+gemini extensions install /path/to/jev-conductor-router --consent
+```
+
+Restart Gemini CLI. `GEMINI.md` tells the model to preview a route before creating a workspace.
+
+### Cline
+
+Follow [llms-install.md](llms-install.md) and paste the `mcpServers` block into `cline_mcp_settings.json`.
+
+### CLI
 
 ```sh
 git clone https://github.com/JussCubs/jev-conductor-router.git
@@ -16,158 +100,122 @@ cd jev-conductor-router
 npm ci
 npm run build
 cp .env.example .env
-```
-
-Choose `JEV_PROVIDER=openrouter` or `JEV_PROVIDER=typesafe` in `.env` and set the
-corresponding API key. The CLI loads `.env` locally. Optional
-`JEV_FALLBACK_PROVIDER` selects the other provider for network/server/rate-limit
-failures. Authentication/request errors do not spend another provider's key.
-No key is bundled. Calls use the providers' typed **Decisions/System One APIs**,
-not chat completions. Requests send the first 20,000 characters of your task to
-your selected Jev provider. Review your brief before sending private code.
-
-Inside a **Conductor cloud workspace**, discover the effective cloud accounts:
-
-```sh
-node src/discover.mjs > connections.json
-```
-
-Run discovery in the account/organization that will execute the task. You can
-copy the resulting snapshot to the machine that runs the router. It contains
-identity hashes, model IDs and quota windows; it does not contain provider keys,
-tokens, emails, source code or transcripts. It is gitignored. Refresh discovery
-regularly: stale quota becomes **unknown**, never an invented full allowance.
-
-Review `examples/policy.json` against `conductor model --json`. Capability tiers
-are editable editorial policy (0 routine, 1 standard, 2 complex, 3 frontier),
-not benchmark scores. Catalog order breaks ties. Models absent from the cloud
-snapshot cannot be selected. Model availability changes; update your policy.
-
-```sh
 printf 'Fix the misspelled heading on the homepage. Run its existing checks.\n' > task.txt
-npm run route -- --task-file task.txt
-# Inspect the explanation first. This next command launches real coding work:
-node dist/cli.js launch --task-file task.txt --project YOUR_CONDUCTOR_PROJECT_ID
+node dist/cli.js route --task-file task.txt --snapshot connections.json
+node dist/cli.js launch --task-file task.txt --snapshot connections.json --project YOUR_PROJECT_ID
 ```
 
-Set `CONDUCTOR_API_KEY` for launch/status/feedback. Launch verifies that `/me`
-matches the snapshot's owner and organization. It does not retry a creation
-request after a dropped response. The repository must already be available on
-your Conductor cloud machine. This package does not change machine permissions.
+`route` prints the decision. `launch` creates a real cloud workspace. `mcp` starts the stdio server and does not read the snapshot.
 
-Overrides `--agent`, `--model`, `--effort`, `--policy`, `--snapshot` and `--state`
-are supported. Explicit choices are constraints; they are not silently changed.
-An explicit model overrides the classifier's capability floor, but never a
-known exhausted allowance or a disabled connection. ACP/standalone Grok Build
-is not automatically supported; Grok models exposed by Cursor are eligible.
+## Environment
 
-## Account discovery
+| Variable | Required | Role |
+| --- | --- | --- |
+| `CONDUCTOR_API_KEY` | For every Conductor call | Bearer token for `https://api.conductor.build`. `CONDUCTOR_API_TOKEN` is accepted as an alias. |
+| `ORBIO_API_KEY` | One Jev key | Orbio decisions. First in the default chain when set. |
+| `ORBIO_BASE_URL` | No | Orbio origin. Defaults to `https://api.orbio.so`. `http` and `https` only. |
+| `OPENROUTER_API_KEY` | One Jev key | OpenRouter Decisions API. |
+| `TYPESAFE_API_KEY` | One Jev key | TypeSafe System One. |
+| `JEV_PROVIDER` | No | `orbio`, `openrouter`, or `typesafe`. When unset, the chain is every configured key in that order. |
+| `JEV_FALLBACK_PROVIDER` | No | One fallback provider. When unset, the remaining configured providers stay in the default order. |
+| `JEV_MODEL` | No | Defaults to `typesafe/jev-1.13`. |
+| `OPENROUTER_JEV_MODEL` | No | Optional model override for OpenRouter only. |
+| `TYPESAFE_JEV_MODEL` | No | Optional model override for TypeSafe only. |
+| `CONDUCTOR_DISCOVERY_OPT_IN` | No | Set to `1` to run the opt-in quota helper. Routing and MCP do not need it. |
 
-The helper reads the effective cloud harness configuration and CLI catalog:
+The CLI loads a local `.env` when one exists. MCP hosts should pass keys in their own server `env` block. Leave `JEV_PROVIDER` unset to use the default chain.
 
-- Codex: the same Conductor credential broker used to launch Codex; quota is
-  matched to its ChatGPT account/workspace ID.
-- Cursor: the actual cloud API key's `/v0/me` identity. CLI subscription quota
-  is used only after the CLI login email matches that API-key identity.
-- Claude: the effective token/key. Inference-only tokens may not permit account
-  profile/usage requests; the connection remains usable with unknown quota.
+Fallback happens only after a network error, a timeout, or HTTP 402, 408, 429, or 5xx. HTTP 400, 401, and 403 stop the chain and name the provider that rejected the key or the request.
 
-Provider credentials stay in the workspace. Unrelated local or BYOK credentials
-do not establish Conductor access. BYOK is not assumed to mean unlimited credit.
-No credit purchases, quota resets, paid-overage activation or credential changes
-are performed. Providers and Conductor's experimental/internal auth interfaces
-can change; a failed probe is not proof of a disconnected account. Outside a
-cloud workspace, supply a snapshot through your own trusted integration instead
-of guessing account identity.
+TypeSafe's native API receives `jev-1.13.0` when `JEV_MODEL` is the default `typesafe/jev-1.13`. Orbio and OpenRouter receive the prefixed id.
 
-## How selection works
+## Tools
 
-1. Jev classifies task difficulty. Invalid, uncertain or unavailable decisions
-   use a disclosed standard fallback, never frontier escalation. The difficulty decision uses the probability distribution: 54% routine plus 45% standard stays standard. Frontier requires at least 65% probability and is excluded from lower-tier automatic routes. Missing configuration is an error.
-2. Filter by discovered/enabled harnesses, model allowlists, explicit choices,
-   capability and known exhaustion. The tightest quota window controls headroom.
-3. Rank eligible models by quota headroom and capability fit. Unknown quota and
-   near-exhausted subscriptions receive penalties. Always use slow mode.
-4. Apply a bounded, per-account learned adjustment for the same model, harness,
-   reasoning effort and task difficulty. The explanation shows both scores.
+| Tool | What it does |
+| --- | --- |
+| `jev_decide` | Ask Jev a choice, score, or noul question. Defaults to the delegation and difficulty questions. |
+| `conductor_route` | Preview the gate, tier, harness, model, and effort. |
+| `conductor_create_workspace` | Run the Jev gate, then create a workspace when the gate passes. Sends `fastMode: false`. |
+| `conductor_start_session` | Start a session in an existing workspace. |
+| `conductor_send_message` | Send a follow-up to an existing session. |
+| `conductor_status` | Read session and workspace status. Status is operational, not a quality review. |
+| `conductor_transcript` | Read `session_transcripts_view` through Conductor's read-only SQL API. |
+| `conductor_list_projects` | List projects visible to the API key. |
+| `conductor_cancel` | Cancel a session. Archive only when `confirmedByUser` is `true`. |
+| `conductor_feedback` | Store an explicit human review of a tracked session. |
 
-The base policy gives unknown quota −35 points; quota below the reserve threshold
-gets `−60 + remainingPercent`, otherwise `remainingPercent / 5`. Excess capability
-costs 15 points per tier. These are understandable routing weights, not a claim
-of universal optimality. The algorithm never downgrades below the task's floor
-just to consume spare quota.
+`conductor_create_workspace` launches when the conductor probability is at least 0.65, or when `delegation` is `conductor` because the user asked for Conductor. A failed difficulty call uses the standard tier. A failed delegation call in `auto` mode does not launch. Pass `projectId` or `repositoryUrl`, not both.
 
-## Learning without fabricated success
+Keep API keys, tokens, passwords, and cookies out of workspace `env`. The client rejects secret-looking names and values that match a secret already in the process environment.
 
-Launch saves an auditable decision in `.jev-router-state.json` (mode 0600).
-Use status observations while a task is running and after it finishes:
+Conductor 429 responses honor `Retry-After` (capped at 20 seconds) and retry up to two extra times. GET requests also retry 5xx and network drops. A workspace or session create that fails before a response is not retried.
+
+## Conductor setup
+
+1. Create an API key in Conductor and set `CONDUCTOR_API_KEY`.
+2. Add the repository to the Conductor cloud machine. This package does not change machine permissions.
+3. Configure the harness you want to run: Claude, Codex, or Cursor. ACP is accepted by the session API when you pass it explicitly.
+4. For quota-aware routing, produce a `connections.json` snapshot. Pass `--agent` and `--model` when you want a fixed choice and can skip the snapshot.
+
+The public routes used here are `POST /v0/workspaces`, `POST /v0/sessions`, `POST /v0/sessions/{id}/messages`, session and workspace status, cancel, archive, `GET /v0/projects`, `POST /v0/sql`, and `GET /me`. The contract is the live OpenAPI document at `https://api.conductor.build/v0/openapi.json`.
+
+## Limits
+
+Workspaces are Conductor cloud machines. This package does not start a local sandbox, a laptop agent, or a second checkout on your machine.
+
+The first 20,000 characters of a task are sent to the Jev provider you configured. Review the brief before it includes private code.
+
+Discovery (`npm run discover`) is separate from routing. It runs only when `CONDUCTOR_DISCOVERY_OPT_IN=1` and only inside a Conductor cloud workspace. It calls undocumented broker routes, and the Cursor path can send a session cookie to `cursor.com`. The snapshot stores identity hashes, model ids, and quota windows. It does not store provider keys or transcripts. Refresh it often: stale quota becomes unknown, which is a penalty, not a full allowance.
+
+## How a route is chosen
+
+1. Jev classifies difficulty. An invalid or unavailable decision uses a disclosed standard fallback. Frontier requires at least 65% probability. The probability mass decides the tier: 54% routine plus 45% standard stays standard.
+2. Filter by the discovered harnesses, model allowlists, explicit choices, capability floor, and known exhaustion. An explicit model is a constraint. It does not override a known exhausted allowance or a disabled connection.
+3. Rank eligible models by quota headroom and capability fit. Unknown quota and near-exhausted subscriptions are penalized. Every launch sends `fastMode: false`.
+4. Apply a bounded per-account adjustment for the same model, harness, effort, and difficulty. The explanation shows both scores.
+
+Unknown quota scores −35. Quota below the reserve threshold scores `−60 + remainingPercent`. Otherwise the score is `remainingPercent / 5`. Extra capability costs 15 points per tier. The router does not drop below the task floor to spend spare quota.
+
+`composer-2.5` and Cursor `auto` have no effort parameter. Set `efforts: []` in the policy. The wire payload omits `effort`. Other launches still send `fastMode: false`.
+
+Review `examples/policy.json` against `conductor model --json`. Tiers are editorial policy (0 routine, 1 standard, 2 complex, 3 frontier), not benchmark scores. Models missing from the snapshot cannot be selected.
+
+## Learning
+
+`launch` writes `.jev-router-state.json` with mode `0600`. The account key is a SHA-256 of `organizationId:userId`.
 
 ```sh
 node dist/cli.js status --session SESSION_ID
-# After a human review against the actual task requirements:
 node dist/cli.js feedback --session SESSION_ID --success true
 ```
 
-The CLI is not a daemon. Automate `status` in your existing supervisor if desired;
-respect Conductor's rate limits. A working-to-idle transition measures operational
-reliability only. Idle before working, cancellation, and an agent's own completion
-claim are not task success. `feedback` records your review. Do not have an LLM
-invent human feedback. Repeated observations do not add samples; correcting a
-review changes one label without resetting its age. Only the first tracked turn
-is scored; use a fresh routed session for a new independently evaluated task.
+Record feedback from a human review of the task. A working-to-idle transition measures operational reliability only. Idle before working, cancellation, and an agent's own completion claim are not task success.
 
-Learning uses a Beta(4,1) prior, at least five effective samples, a 30-day
-half-life and a maximum 12-point adjustment. Quality and reliability have separate
-posteriors. Stale evidence fades so a provider can recover. At most 2,000 runs are
-kept locally. State writes are locked and atomic; back up this file as needed.
-Set `learning.enabled=false` in the policy to disable adjustments immediately.
-No random experiment weakens a task's capability requirement. The learner does
-not rewrite code or prompts, share observations with other accounts, or assert
-quality improvements before reviewed outcomes exist.
+Learning uses a Beta(4,1) prior, at least five effective samples, a 30-day half-life, and a maximum 12-point adjustment. Quality and reliability have separate posteriors. At most 2,000 runs are kept. Set `learning.enabled` to `false` in the policy to stop adjustments. The state file stays on the machine that wrote it.
 
-Selection bias remains: observed success on chosen models cannot prove an
-unchosen model would have been better. A bounded adaptive policy is useful,
-but no finite dataset establishes the best router for every possible task.
-
-## Library and evaluation
+## Library
 
 ```ts
-import { assessDelegation, assessTask, selectRoute } from 'jev-conductor-router';
+import { assessDelegation, assessTask } from "jev-conductor-router/jev";
+import { selectRoute } from "jev-conductor-router";
+
 const delegation = await assessDelegation(task);
-if (!delegation.useConductor) return; // Continue with the current assistant.
-const assessment = await assessTask(task);
-const route = selectRoute({
-  difficulty: assessment.level, policy, connections, evidence,
-});
-// route.agent / route.model / route.effort / route.fastMode === false
+if (delegation.useConductor) {
+  const assessment = await assessTask(task);
+  const route = selectRoute({ difficulty: assessment.level, policy, connections, evidence });
+  // route.fastMode === false
+}
 ```
 
 ```sh
 npm test
+npm run lint
 npm run build
 npm run evaluate -- --dataset examples/evaluation.json
 ```
 
-The fixture evaluator compares baseline and learned selections against expected
-routes. It is a routing regression tool, **not** a measured quality uplift or a
-Jev accuracy benchmark. Maintain a held-out set of your own tasks and explicit
-human reviews before changing tiers or weights. Provider tests use recorded
-contract-shaped fixtures; live calls require your own key and incur normal usage.
+The evaluator checks routing fixtures. It is a regression tool for this policy, not a Jev accuracy benchmark.
 
-## References
+## Packaging
 
-- [Conductor API](https://api.conductor.build/v0/openapi.json) and installed `conductor model --json`.
-- [TypeSafe API](https://docs.typesafe.ai/api): `https://api.typesafe.ai/v1/systemone`.
-- [OpenRouter Decisions API](https://openrouter.ai/api/alpha/decisions).
-- [CodexBar provider documentation](https://github.com/steipete/CodexBar/tree/main/docs)
-  informed the independent quota adapters. No CodexBar Swift source is included.
-
-The scoring and learning policy is extracted from a production Conductor
-integration. This repository contains only standalone routing, discovery,
-provider adapters, local outcome storage and evaluation fixtures. Public provider
-contracts and the example catalog were checked on 2026-09-25.
-
-
-Before routing or launching, Jev decides whether a separate coding workspace is useful. Explanations and ordinary lookups return `launched: false`; repository edits, builds and tests can proceed. If delegation assessment fails, no session is launched. Use `--delegation conductor` only for an explicit user request to use Conductor. This does not bypass model capability or quota constraints.
-
-Per-model effort controls matter: `composer-2.5` and Cursor `auto` have no effort parameter. Configure `efforts: []`; the router omits the wire field even if an effort override was supplied. Outcomes use the internal `default` key for these models, never an invalid API effort. All launches still send `fastMode: false`.
+Marketplace manifests, the MCP registry `server.json`, and the exact commands a maintainer runs to publish are in [docs/publishing.md](docs/publishing.md). This repository does not publish itself.

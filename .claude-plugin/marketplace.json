@@ -1,0 +1,16 @@
+{
+  "name": "jev-conductor-router",
+  "description": "Conductor Jev Router, a Jev-gated MCP server for Conductor cloud workspaces.",
+  "owner": {
+    "name": "JussCubs"
+  },
+  "plugins": [
+    {
+      "name": "jev-conductor-router",
+      "source": "./",
+      "description": "Decide with Jev whether a coding task needs a Conductor cloud workspace, then route and operate it.",
+      "version": "0.2.0",
+      "homepage": "https://github.com/JussCubs/jev-conductor-router"
+    }
+  ]
+}

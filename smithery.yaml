@@ -1,0 +1,40 @@
+# Local stdio config for Smithery. Users supply their own keys. Nothing is bundled.
+# Current publish flow: https://smithery.ai/docs/build/publish
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      conductorApiKey:
+        type: string
+        title: Conductor API key
+        description: Bearer token for https://api.conductor.build.
+      orbioApiKey:
+        type: string
+        title: Orbio API key
+        description: Optional. Tried first in the Jev chain when set.
+      openrouterApiKey:
+        type: string
+        title: OpenRouter API key
+        description: Optional OpenRouter Decisions API key.
+      typesafeApiKey:
+        type: string
+        title: TypeSafe API key
+        description: Optional TypeSafe System One key.
+      jevModel:
+        type: string
+        title: Jev model
+        default: typesafe/jev-1.13
+        description: Defaults to typesafe/jev-1.13.
+  exampleConfig:
+    jevModel: typesafe/jev-1.13
+  commandFunction: |
+    (config) => {
+      const env = {};
+      if (config.conductorApiKey) env.CONDUCTOR_API_KEY = config.conductorApiKey;
+      if (config.orbioApiKey) env.ORBIO_API_KEY = config.orbioApiKey;
+      if (config.openrouterApiKey) env.OPENROUTER_API_KEY = config.openrouterApiKey;
+      if (config.typesafeApiKey) env.TYPESAFE_API_KEY = config.typesafeApiKey;
+      if (config.jevModel) env.JEV_MODEL = config.jevModel;
+      return { command: 'node', args: ['dist/cli.js', 'mcp'], env };
+    }

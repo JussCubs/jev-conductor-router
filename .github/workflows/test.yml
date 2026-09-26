@@ -1,4 +1,4 @@
-name: Routing checks
+name: Checks
 on: [push, pull_request]
 permissions:
   contents: read
@@ -12,6 +12,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm run typecheck
       - run: npm test
       - run: npm run build
       - run: npm run evaluate -- --dataset examples/evaluation.json
