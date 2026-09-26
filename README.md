@@ -180,7 +180,7 @@ TypeSafe's native API receives `jev-1.13.0` when `JEV_MODEL` is the default `typ
 | `conductor_start_session` | Start a session in an existing workspace. |
 | `conductor_send_message` | Send a follow-up to an existing session. |
 | `conductor_status` | Read session and workspace status. Status is operational, not a quality review. |
-| `conductor_transcript` | Read `session_transcripts_view` through Conductor's read-only SQL API. |
+| `conductor_transcript` | Read `session_transcripts_view` through Conductor's read-only SQL API. With a `sessionId`, falls back to the public `GET /v0/sessions/{id}/messages` endpoint when SQL is unavailable and returns condensed prompts, replies, commands, and `finalAnswer` (`raw: true` returns every message). |
 | `conductor_list_projects` | List projects visible to the API key. |
 | `conductor_cancel` | Cancel a session. Archive only when `confirmedByUser` is `true`. |
 | `conductor_feedback` | Store an explicit human review of a tracked session. |
