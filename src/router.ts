@@ -2,7 +2,7 @@ import { DEFAULT_ROUTING_LEARNING, learnedRouteScore, type RoutingEvidence, type
 export { assessTask, assessDelegation } from "./jev.js";
 export type Agent = "codex" | "claude" | "cursor";
 export interface Connection {
-  agent: Agent; accountFingerprint: string; authKind: "subscription" | "byok";
+  agent: Agent; accountFingerprint: string; authKind: "subscription" | "byok" | "conductor";
   enabled: boolean; models: string[]; observedAt: string | null;
   windows: { usedPercent: number; resetsAt: string | null }[]; quotaError: string | null;
 }
@@ -34,7 +34,7 @@ export function validateConnections(value: unknown): Connection[] {
   const seen = new Set<string>();
   for (const c of value) {
     if (!c || !["codex", "claude", "cursor"].includes(c.agent) || seen.has(c.agent) || !/^[a-f0-9]{64}$/.test(c.accountFingerprint)
-      || !["byok", "subscription"].includes(c.authKind) || typeof c.enabled !== "boolean" || !Array.isArray(c.models)
+      || !["byok", "subscription", "conductor"].includes(c.authKind) || typeof c.enabled !== "boolean" || !Array.isArray(c.models)
       || c.models.some((m: unknown) => typeof m !== "string") || !Array.isArray(c.windows) || c.windows.length > 8
       || c.windows.some((w: any) => !w || typeof w.usedPercent !== "number" || !Number.isFinite(w.usedPercent) || w.usedPercent < 0 || w.usedPercent > 100
         || (w.resetsAt !== null && (typeof w.resetsAt !== "string" || !Number.isFinite(Date.parse(w.resetsAt)))))) throw new Error("Invalid discovered account snapshot");

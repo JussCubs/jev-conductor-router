@@ -1,9 +1,8 @@
-import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 import { accountKey } from "./account.js";
 import { ConductorClient, sessionPayload, transcriptQuery, workspacePayload, type WorkspaceDraft } from "./conductor.js";
 import { planLaunch, previewTask, type PlanInput } from "./gate.js";
 import type { RoutingEvidence } from "./learning.js";
+import { loadDefaultPolicy } from "./policy.js";
 import { validateConnections, validatePolicy, type Connection, type Policy } from "./router.js";
 import { readRuns, updateRuns, type Run } from "./store.js";
 
@@ -13,16 +12,13 @@ export interface LaunchInput extends PlanInput, Omit<WorkspaceDraft, "env"> {
   account?: string;
 }
 
-async function defaultPolicy(): Promise<Policy> {
-  const path = fileURLToPath(new URL("../examples/policy.json", import.meta.url));
-  return validatePolicy(JSON.parse(await readFile(path, "utf8")));
-}
-
+/** Validates caller-supplied routing inputs. When no connections snapshot is
+ * passed, the gate detects configured harnesses and models from Conductor at
+ * runtime (see catalog.ts), and only after the delegation gate passes. */
 export async function resolveRouting(input: { connections?: unknown; policy?: unknown }): Promise<{ connections?: Connection[]; policy?: Policy }> {
-  if (input.connections === undefined) return {};
-  const connections = validateConnections(input.connections);
-  const policy = input.policy === undefined ? await defaultPolicy() : validatePolicy(input.policy);
-  return { connections, policy };
+  const policy = input.policy === undefined ? undefined : validatePolicy(input.policy);
+  if (input.connections === undefined) return policy ? { policy } : {};
+  return { connections: validateConnections(input.connections), policy: policy ?? await loadDefaultPolicy() };
 }
 
 export async function previewRoute(input: PlanInput) {
@@ -34,7 +30,7 @@ export async function createFromPlan(plan: Awaited<ReturnType<typeof planLaunch>
   const agent = plan.route?.agent ?? input.agent;
   const model = plan.route?.model ?? input.model;
   const effort = plan.route ? plan.route.effort : input.effort;
-  if (!agent) throw new Error("No route. Pass agent, or connections from a discovery snapshot, before creating a workspace.");
+  if (!agent) throw new Error(`No route${plan.routeError ? `: ${plan.routeError}` : ""}. Pass agent and model explicitly to launch anyway.`);
   const payload = workspacePayload({
     projectId: input.projectId, repositoryUrl: input.repositoryUrl, branch: input.branch, name: input.name,
     sessionName: input.sessionName, agent, model, effort, message: input.task, env: input.envVars,
@@ -61,6 +57,7 @@ export async function createFromPlan(plan: Awaited<ReturnType<typeof planLaunch>
   }
   return { launched: true as const, workspaceId: result.workspaceId, sessionId: result.sessionId, deepLink: result.deepLink,
     initialMessage: result.initialMessage, learningSaved, delegation: plan.delegation, assessment: plan.assessment,
+    ...(plan.routeError ? { routeWarning: plan.routeError } : {}),
     ...(plan.route ?? {}), agent, ...(model ? { model } : {}), ...(effort ? { effort } : {}), fastMode: false as const };
 }
 

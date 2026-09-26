@@ -51,7 +51,7 @@ Pass `delegation: "conductor"` only for an explicit user request. That bypasses 
 Prefer the MCP server (`npx -y jev-conductor-router mcp`) when the client can start it. Otherwise use the CLI.
 
 - `jev_decide` classifies a task and does not launch.
-- `conductor_route` previews the gate, tier, harness, model, and effort. It never launches.
+- `conductor_route` previews the gate, tier, harness, model, and effort. Configured harnesses and models come from Conductor at runtime. It returns `route` or a `routeError` explaining why not. It never launches.
 - `conductor_create_workspace` applies the gate, then creates a workspace with `fastMode: false`.
 - `conductor_start_session`, `conductor_send_message`, `conductor_status`, `conductor_transcript`, and `conductor_list_projects` operate an existing workspace.
 - `conductor_cancel` cancels a session. Set `archive: true` only together with `confirmedByUser: true` after the user agrees to archive.
@@ -80,4 +80,4 @@ npx -y jev-conductor-router launch --task-file task.txt --snapshot connections.j
 
 ## Conductor limits
 
-Workspaces are cloud machines. Discovery of quota is a separate opt-in helper (`CONDUCTOR_DISCOVERY_OPT_IN=1`) and uses undocumented broker routes. Routing and MCP do not require it when the user passes `agent` and `model`, or a connections snapshot.
+Workspaces are cloud machines. Discovery of quota is a separate opt-in helper (`CONDUCTOR_DISCOVERY_OPT_IN=1`) and uses undocumented broker routes. Routing and MCP do not require it: without a snapshot they read configured harnesses and models from Conductor's `list_models`.
