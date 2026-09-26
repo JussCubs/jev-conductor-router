@@ -162,6 +162,7 @@ node dist/cli.js launch --task-file task.txt --snapshot connections.json --proje
 | `JEV_MODEL` | No | Defaults to `typesafe/jev-1.13`. |
 | `OPENROUTER_JEV_MODEL` | No | Optional model override for OpenRouter only. |
 | `TYPESAFE_JEV_MODEL` | No | Optional model override for TypeSafe only. |
+| `JEV_STATE_DIR` | No | Directory for the MCP server's learning state (`.jev-router-state.json`). Defaults to the working directory. |
 | `CONDUCTOR_DISCOVERY_OPT_IN` | No | Set to `1` to run the opt-in quota helper. Routing and MCP do not need it. |
 
 The CLI loads a local `.env` when one exists. MCP hosts should pass keys in their own server `env` block. Leave `JEV_PROVIDER` unset to use the default chain.

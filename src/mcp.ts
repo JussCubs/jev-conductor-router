@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
@@ -29,7 +30,8 @@ export function createMcpServer(env: NodeJS.ProcessEnv = process.env) {
     instructions: "Use jev_decide or conductor_route before creating a Conductor workspace. conductor_create_workspace launches real cloud work only when Jev's conductor probability is at least 0.65, unless delegation is conductor because the user explicitly asked. Never put secrets in workspace env. Archive only when the user confirmed.",
   });
   const client = () => new ConductorClient({ env });
-  const statePath = (path?: string) => path || ".jev-router-state.json";
+  // JEV_STATE_DIR keeps learning state in one place regardless of the working directory.
+  const statePath = (path?: string) => path || (env.JEV_STATE_DIR ? join(env.JEV_STATE_DIR, ".jev-router-state.json") : ".jev-router-state.json");
 
   server.registerTool("jev_decide", {
     title: "Jev decide",
