@@ -1,9 +1,18 @@
-
+/**
+ * OPT-IN account discovery. Not used by the router CLI or the MCP server.
+ * Set CONDUCTOR_DISCOVERY_OPT_IN=1 to run it. It only works inside a Conductor
+ * cloud workspace and calls undocumented workspace broker routes. The Cursor
+ * path can send a session cookie to cursor.com. Those private interfaces can
+ * change; a failed probe is not proof that a harness is disconnected.
+ * Do not run this unless you intend that access. Quota snapshots contain
+ * identity hashes and model ids, not provider keys or transcripts.
+ */
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 const run = promisify(execFile);
 const env = process.env;
+if (env.CONDUCTOR_DISCOVERY_OPT_IN !== '1') throw new Error('Discovery is opt-in. It calls undocumented Conductor broker routes and may send a session cookie. Set CONDUCTOR_DISCOVERY_OPT_IN=1 to run it.');
 const workspaceId = env.CONDUCTOR_WORKSPACE_ID;
 const workspaceAuth = env.CONDUCTOR_INTERNAL_WORKSPACE_AUTH;
 if (env.CONDUCTOR_IS_LOCAL !== '0' || !workspaceId || !workspaceAuth) throw new Error('Discovery requires a Conductor cloud workspace');

@@ -1,0 +1,63 @@
+import assert from "node:assert/strict";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const root = fileURLToPath(new URL("..", import.meta.url));
+const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
+const json = (path: string) => JSON.parse(read(path));
+const pkg = json("../package.json");
+
+test("package metadata is ready to publish without publishing", () => {
+  assert.equal(pkg.name, "jev-conductor-router");
+  assert.equal(pkg.mcpName, "io.github.jusscubs/jev-conductor-router");
+  assert.equal(pkg.engines.node, ">=20");
+  assert.equal(pkg.bin["jev-conductor-router"], "./dist/cli.js");
+  assert.equal(pkg.scripts.prepare, "node scripts/prepare.mjs");
+  assert.equal(pkg.scripts.prepublishOnly, "npm run build");
+  assert.equal(pkg.scripts.build, "tsc");
+  assert.equal(pkg.scripts.typecheck, "tsc --noEmit");
+  assert.match(pkg.scripts.lint, /tsc --noEmit/);
+  assert.deepEqual(pkg.dependencies, { "@modelcontextprotocol/sdk": pkg.dependencies["@modelcontextprotocol/sdk"], zod: pkg.dependencies.zod });
+  assert.equal(Object.keys(pkg.dependencies).sort().join(), "@modelcontextprotocol/sdk,zod");
+});
+
+test("marketplace manifests point at the stdio server and the skill", () => {
+  const plugin = json("../plugin.json");
+  const mcp = json("../mcp.json");
+  const claude = json("../.mcp.json");
+  const cursor = json("../.cursor-plugin/plugin.json");
+  const grok = json("../.grok-plugin/plugin.json");
+  const codex = json("../.codex-plugin/plugin.json");
+  const server = json("../server.json");
+  const gemini = json("../gemini-extension.json");
+  const skill = read("../skills/conductor-jev-router/SKILL.md");
+  assert.equal(plugin.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
+  assert.equal(plugin.name, "jev-conductor-router");
+  assert.equal(plugin.extensions["com.openai"].interface.logo, "./assets/logo.svg");
+  assert.equal(mcp.$schema, "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json");
+  assert.deepEqual(mcp.mcpServers["jev-conductor-router"].args, ["-y", "github:JussCubs/jev-conductor-router", "mcp"]);
+  assert.match(read("../README.md"), /npx -y github:JussCubs\/jev-conductor-router mcp/);
+  assert.match(read("../llms-install.md"), /npx -y github:JussCubs\/jev-conductor-router mcp/);
+  assert.equal(mcp.mcpServers["jev-conductor-router"].type, "stdio");
+  assert.equal(claude.mcpServers["jev-conductor-router"].command, "npx");
+  assert.equal(cursor.name, plugin.name);
+  assert.equal(cursor.mcpServers, ".mcp.json");
+  assert.equal(grok.logo, "./assets/logo.svg");
+  assert.equal(codex.interface.displayName, "Conductor Jev Router");
+  assert.equal(server.name, pkg.mcpName);
+  assert.equal(server.packages[0].identifier, pkg.name);
+  assert.equal(server.packages[0].version, pkg.version);
+  assert.equal(server.packages[0].environmentVariables.find((item: { name: string }) => item.name === "CONDUCTOR_API_KEY").isSecret, true);
+  assert.equal(gemini.mcpServers["jev-conductor-router"].command, "npx");
+  assert.match(skill, /^---\nname: conductor-jev-router\n/);
+  assert.match(skill, /metadata:\n {2}openclaw:/);
+  assert.equal(statSync(new URL("../.agents/skills/conductor-jev-router", import.meta.url)).isDirectory(), true);
+  assert.equal(existsSync(new URL("../assets/logo.svg", import.meta.url)), true);
+  assert.equal(existsSync(new URL("../docs/publishing.md", import.meta.url)), true);
+  assert.equal(existsSync(new URL("../llms-install.md", import.meta.url)), true);
+  assert.equal(json("../.claude-plugin/marketplace.json").plugins[0].source, "./");
+  assert.equal(json("../.agents/plugins/marketplace.json").plugins[0].source.path, "./");
+  assert.doesNotMatch(read("../README.md") + read("../docs/publishing.md") + skill, /railway\.app|robertoagent|RobertoAgent/i);
+  assert.equal(root.endsWith("/"), true);
+});

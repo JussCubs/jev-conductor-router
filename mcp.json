@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "jev-conductor-router": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "github:JussCubs/jev-conductor-router", "mcp"]
+    }
+  }
+}

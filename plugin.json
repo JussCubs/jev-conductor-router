@@ -1,0 +1,34 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "jev-conductor-router",
+  "version": "0.2.0",
+  "description": "Decide with Jev whether a coding task needs a Conductor cloud workspace, route the harness and model, and operate that workspace over MCP.",
+  "author": {
+    "name": "JussCubs",
+    "url": "https://github.com/JussCubs"
+  },
+  "homepage": "https://github.com/JussCubs/jev-conductor-router",
+  "repository": "https://github.com/JussCubs/jev-conductor-router",
+  "license": "MIT",
+  "keywords": ["conductor", "jev", "mcp", "routing", "coding-agent"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Conductor Jev Router",
+        "shortDescription": "Route coding tasks to Conductor with Jev.",
+        "longDescription": "Uses Jev to decide whether a task needs a Conductor cloud workspace, how hard it is, and which harness and model to use, then calls the public Conductor API. Users bring their own API keys.",
+        "developerName": "JussCubs",
+        "category": "Developer Tools",
+        "capabilities": ["Read", "Write"],
+        "websiteURL": "https://github.com/JussCubs/jev-conductor-router",
+        "brandColor": "#10241C",
+        "composerIcon": "./assets/logo.svg",
+        "logo": "./assets/logo.svg",
+        "defaultPrompt": [
+          "Should this task run in a Conductor workspace?",
+          "Route this coding task and show the harness and model before launching."
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.jusscubs/jev-conductor-router",
+  "title": "Conductor Jev Router",
+  "description": "Jev-gated router for Conductor cloud workspaces, exposed as a stdio MCP server.",
+  "websiteUrl": "https://github.com/JussCubs/jev-conductor-router",
+  "repository": {
+    "url": "https://github.com/JussCubs/jev-conductor-router",
+    "source": "github"
+  },
+  "version": "0.2.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "jev-conductor-router",
+      "version": "0.2.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp",
+          "description": "Start the stdio MCP server."
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "CONDUCTOR_API_KEY",
+          "description": "Bearer token for https://api.conductor.build. The user supplies this key. It is never bundled.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "ORBIO_API_KEY",
+          "description": "Orbio Jev decisions key. Tried first when set.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "OPENROUTER_API_KEY",
+          "description": "OpenRouter Decisions API key.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "TYPESAFE_API_KEY",
+          "description": "TypeSafe System One API key.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "ORBIO_BASE_URL",
+          "description": "Optional Orbio origin. Defaults to https://api.orbio.so.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "JEV_PROVIDER",
+          "description": "Optional primary Jev provider: orbio, openrouter, or typesafe.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "JEV_FALLBACK_PROVIDER",
+          "description": "Optional single fallback provider. When unset, the remaining configured providers are tried in the default order.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "JEV_MODEL",
+          "description": "Jev model id. Defaults to typesafe/jev-1.13.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false,
+          "default": "typesafe/jev-1.13"
+        }
+      ]
+    }
+  ]
+}

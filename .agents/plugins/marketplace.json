@@ -1,0 +1,20 @@
+{
+  "name": "jev-conductor-router",
+  "interface": {
+    "displayName": "Conductor Jev Router"
+  },
+  "plugins": [
+    {
+      "name": "jev-conductor-router",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

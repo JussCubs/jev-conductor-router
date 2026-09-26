@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "jev-conductor-router": {
+      "command": "npx",
+      "args": ["-y", "github:JussCubs/jev-conductor-router", "mcp"]
+    }
+  }
+}

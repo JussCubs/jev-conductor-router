@@ -1,0 +1,12 @@
+{
+  "name": "jev-conductor-router",
+  "version": "0.2.0",
+  "description": "Decide with Jev whether a coding task needs a Conductor cloud workspace, route the harness and model, and operate that workspace over MCP.",
+  "author": {
+    "name": "JussCubs"
+  },
+  "homepage": "https://github.com/JussCubs/jev-conductor-router",
+  "repository": "https://github.com/JussCubs/jev-conductor-router",
+  "license": "MIT",
+  "keywords": ["conductor", "jev", "mcp", "routing"]
+}
