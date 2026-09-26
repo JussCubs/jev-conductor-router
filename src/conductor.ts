@@ -214,4 +214,55 @@ export class ConductorClient {
     return this.request("POST", `/v0/workspaces/${encodeURIComponent(workspaceId)}/archive`, undefined, undefined, false);
   }
   sql(query: string) { return this.request("POST", "/v0/sql", { query }, undefined, true); }
+  sessionMessages(sessionId: string, query?: { limit?: number; offset?: number; after?: string }) {
+    return this.request("GET", `/v0/sessions/${encodeURIComponent(sessionId)}/messages`, undefined, query);
+  }
+  /** Reads a whole session transcript through the public messages endpoint, page by page. */
+  async allSessionMessages(sessionId: string, maxMessages = 1000) {
+    const rows: any[] = [];
+    for (let offset = 0; rows.length < maxMessages;) {
+      const page = await this.sessionMessages(sessionId, { limit: 100, offset });
+      const data = Array.isArray(page?.data) ? page.data : [];
+      rows.push(...data);
+      if (!page?.hasMore || !data.length) return { messages: rows, truncated: false };
+      offset += data.length;
+    }
+    return { messages: rows.slice(0, maxMessages), truncated: true };
+  }
+}
+
+function textParts(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+  return content.map((part: any) => typeof part === "string" ? part : part?.type === "text" && typeof part.text === "string" ? part.text : "").filter(Boolean).join("\n");
+}
+
+/** Condenses raw transcript messages into user prompts, agent replies and
+ * commands. Harness-specific events that carry no readable text are counted,
+ * not dropped silently. */
+export function condenseTranscript(messages: any[]) {
+  const entries: { index: number; at: string; role: "user" | "agent" | "command"; text: string }[] = [];
+  let skipped = 0;
+  for (const row of messages) {
+    const content = row?.content ?? {};
+    const at = typeof row?.receivedAt === "string" ? row.receivedAt : "";
+    const index = typeof row?.sessionIndex === "number" ? row.sessionIndex : entries.length;
+    if (row?.type === "userMessage" && typeof content.message === "string") { entries.push({ index, at, role: "user", text: content.message }); continue; }
+    const event = content?.rawPayload?.event ?? content?.rawPayload ?? content;
+    const item = event?.item;
+    if (event?.type === "item.completed" && item?.type === "agentMessage" && typeof item.text === "string" && item.text) {
+      entries.push({ index, at, role: "agent", text: item.text }); continue;
+    }
+    if (event?.type === "item.completed" && item?.type === "commandExecution" && typeof item.command === "string") {
+      entries.push({ index, at, role: "command", text: item.command }); continue;
+    }
+    if (event?.type === "assistant" || event?.message?.role === "assistant") {
+      const text = textParts(event?.message?.content);
+      if (text) { entries.push({ index, at, role: "agent", text }); continue; }
+    }
+    if (event?.type === "result" && typeof event.result === "string" && event.result) { entries.push({ index, at, role: "agent", text: event.result }); continue; }
+    skipped += 1;
+  }
+  const finalAnswer = [...entries].reverse().find((entry) => entry.role === "agent")?.text ?? null;
+  return { entries, finalAnswer, otherEvents: skipped };
 }

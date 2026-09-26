@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ConductorClient, transcriptQuery, workspacePayload } from "../src/conductor.js";
+import { ConductorClient, condenseTranscript, transcriptQuery, workspacePayload } from "../src/conductor.js";
 import { createConductorWorkspace } from "../src/actions.js";
 
 const sleep = async () => {};
@@ -99,4 +99,30 @@ test("session create and message bodies match the public API", async () => {
   assert.deepEqual(bodies[0].body, { workspaceId: "ws-1", agent: "claude", fastMode: false, model: "fable-5-1", effort: "high", message: "continue" });
   assert.equal(bodies[1].url.endsWith("/v0/sessions/session%2F1/messages"), true);
   assert.deepEqual(bodies[1].body, { message: "next step" });
+});
+
+test("transcripts page through the public messages endpoint and condense to replies", async () => {
+  const urls: string[] = [];
+  const event = (i: number, payload: unknown) => ({ id: `m${i}`, sessionId: "s", sessionIndex: i, type: "agent", receivedAt: `2026-09-26T20:52:${10 + i}Z`, content: { rawPayload: { event: payload } } });
+  const all = [
+    { id: "m1", sessionId: "s", sessionIndex: 1, type: "userMessage", receivedAt: "2026-09-26T20:52:05Z", content: { message: "List the top-level directories." } },
+    event(2, { type: "turn.started" }),
+    event(3, { type: "item.completed", item: { type: "commandExecution", command: "ls -d */" } }),
+    event(4, { type: "item.completed", item: { type: "agentMessage", text: "apps, docs, packages" } }),
+    event(5, { type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "Claude-shaped reply" }] } }),
+  ];
+  const client = new ConductorClient({ apiKey: "conductor-secret", sleep, fetch: async (url) => {
+    urls.push(String(url));
+    const offset = Number(new URL(String(url)).searchParams.get("offset") ?? 0);
+    const data = all.slice(offset, offset + 3);
+    return Response.json({ data, offset, hasMore: offset + 3 < all.length });
+  } });
+  const { messages, truncated } = await client.allSessionMessages("s");
+  assert.equal(messages.length, 5); assert.equal(truncated, false);
+  assert.equal(urls.length, 2);
+  assert.match(urls[0], /\/v0\/sessions\/s\/messages\?limit=100&offset=0$/);
+  const condensed = condenseTranscript(messages);
+  assert.deepEqual(condensed.entries.map((e) => e.role), ["user", "command", "agent", "agent"]);
+  assert.equal(condensed.finalAnswer, "Claude-shaped reply");
+  assert.equal(condensed.otherEvents, 1);
 });

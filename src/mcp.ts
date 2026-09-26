@@ -1,10 +1,11 @@
+import { join } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { createConductorWorkspace, previewRoute, resolveRouting, saveFeedback } from "./actions.js";
 import { accountKey } from "./account.js";
 import { askJev, builtinQuestions, type JevQuestion } from "./jev.js";
-import { ConductorClient, sessionPayload, transcriptQuery } from "./conductor.js";
+import { ConductorClient, condenseTranscript, sessionPayload, transcriptQuery } from "./conductor.js";
 import { readRuns } from "./store.js";
 import { VERSION } from "./version.js";
 
@@ -29,7 +30,8 @@ export function createMcpServer(env: NodeJS.ProcessEnv = process.env) {
     instructions: "Use jev_decide or conductor_route before creating a Conductor workspace. conductor_create_workspace launches real cloud work only when Jev's conductor probability is at least 0.65, unless delegation is conductor because the user explicitly asked. Never put secrets in workspace env. Archive only when the user confirmed.",
   });
   const client = () => new ConductorClient({ env });
-  const statePath = (path?: string) => path || ".jev-router-state.json";
+  // JEV_STATE_DIR keeps learning state in one place regardless of the working directory.
+  const statePath = (path?: string) => path || (env.JEV_STATE_DIR ? join(env.JEV_STATE_DIR, ".jev-router-state.json") : ".jev-router-state.json");
 
   server.registerTool("jev_decide", {
     title: "Jev decide",
@@ -134,11 +136,21 @@ export function createMcpServer(env: NodeJS.ProcessEnv = process.env) {
 
   server.registerTool("conductor_transcript", {
     title: "Conductor transcript",
-    description: "Read a session transcript through Conductor's read-only SQL view session_transcripts_view. Pass sessionId or a single SELECT.",
-    inputSchema: { sessionId: z.string().optional(), query: z.string().optional() },
+    description: "Read a session transcript. With sessionId, reads Conductor's read-only SQL view session_transcripts_view and falls back to the public session messages endpoint when SQL is unavailable (condensed to user prompts, agent replies, commands and finalAnswer; raw true returns every message). A custom query must be a single SELECT on session_transcripts_view.",
+    inputSchema: { sessionId: z.string().optional(), query: z.string().optional(), raw: z.boolean().optional() },
     annotations: readOnly,
-  }, async ({ sessionId, query }) => {
-    try { return ok(await client().sql(transcriptQuery(sessionId, query))); } catch (error) { return fail(error); }
+  }, async ({ sessionId, query, raw }) => {
+    try {
+      const statement = transcriptQuery(sessionId, query);
+      const conductor = client();
+      try { return ok(await conductor.sql(statement)); }
+      catch (sqlError) {
+        if (query || !sessionId) throw sqlError;
+        const { messages, truncated } = await conductor.allSessionMessages(sessionId);
+        return ok({ source: "session_messages", sqlError: sqlError instanceof Error ? sqlError.message : "SQL unavailable", sessionId,
+          messageCount: messages.length, truncated, ...(raw ? { messages } : condenseTranscript(messages)) });
+      }
+    } catch (error) { return fail(error); }
   });
 
   server.registerTool("conductor_list_projects", {
