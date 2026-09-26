@@ -1,12 +1,12 @@
 {
   "name": "jev-conductor-router",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Decide with Jev whether a coding task needs a Conductor cloud workspace, then route and operate it.",
   "contextFileName": "GEMINI.md",
   "mcpServers": {
     "jev-conductor-router": {
       "command": "npx",
-      "args": ["-y", "github:JussCubs/jev-conductor-router", "mcp"]
+      "args": ["-y", "jev-conductor-router", "mcp"]
     }
   }
 }

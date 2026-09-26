@@ -14,10 +14,10 @@ This server only controls Conductor cloud workspaces. It does not start a local 
 
 ## Stdio config
 
-Before the package is on npm, start it from GitHub. `prepare` builds `dist/` during that install:
+Start the published npm package. The marketplace logo is `assets/logo-400.png` (400×400).
 
 ```sh
-npx -y github:JussCubs/jev-conductor-router mcp
+npx -y jev-conductor-router mcp
 ```
 
 Add this block to Cline's MCP settings (`cline_mcp_settings.json`). The `mcpServers` object is the root of that file. Put the user's keys in `env`. Do not commit those keys.
@@ -27,7 +27,7 @@ Add this block to Cline's MCP settings (`cline_mcp_settings.json`). The `mcpServ
   "mcpServers": {
     "jev-conductor-router": {
       "command": "npx",
-      "args": ["-y", "github:JussCubs/jev-conductor-router", "mcp"],
+      "args": ["-y", "jev-conductor-router", "mcp"],
       "env": {
         "CONDUCTOR_API_KEY": "PASTE_USER_CONDUCTOR_KEY",
         "ORBIO_API_KEY": "PASTE_USER_ORBIO_KEY_OR_OMIT",

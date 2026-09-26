@@ -2,7 +2,7 @@
   "name": "jev-conductor-router",
   "displayName": "Conductor Jev Router",
   "description": "Decide with Jev whether a coding task needs a Conductor cloud workspace, route the harness and model, and operate that workspace over MCP.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "JussCubs"
   },

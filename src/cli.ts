@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createFromPlan, saveFeedback } from "./actions.js";
 import { accountKey } from "./account.js";
 import { ConductorClient } from "./conductor.js";
@@ -13,8 +14,10 @@ import { observeRun, readRuns, updateRuns } from "./store.js";
 
 loadLocalEnv();
 
+const defaultPolicy = fileURLToPath(new URL("../examples/policy.json", import.meta.url));
 const { values: args, positionals } = parseArgs({ allowPositionals: true, options: {
-  snapshot: { type: "string", default: "connections.json" }, policy: { type: "string", default: "examples/policy.json" },
+  help: { type: "boolean", short: "h" },
+  snapshot: { type: "string", default: "connections.json" }, policy: { type: "string", default: defaultPolicy },
   state: { type: "string", default: ".jev-router-state.json" }, "task-file": { type: "string" },
   delegation: { type: "string", default: "auto" },
   project: { type: "string" }, agent: { type: "string" }, model: { type: "string" }, effort: { type: "string" },
@@ -42,8 +45,34 @@ function loadLocalEnv() {
 }
 const json = async (path: string) => JSON.parse(await readFile(path, "utf8"));
 const print = (value: unknown) => console.log(JSON.stringify(value, null, 2));
+const usage = `jev-conductor-router <command> [options]
+
+Commands:
+  mcp        Start the stdio MCP server
+  route      Preview a route. Does not launch
+  launch     Create a Conductor workspace when the gate passes
+  status     Read operational status for a tracked session
+  feedback   Record an explicit human review of a tracked session
+  evaluate   Run offline routing fixtures
+
+Options:
+  -h, --help                 Show this help
+  --snapshot <path>          Connections snapshot (default: connections.json)
+  --policy <path>            Routing policy (default: examples/policy.json in this package)
+  --state <path>             Learning state (default: .jev-router-state.json)
+  --task-file <path>         Task brief for route and launch
+  --delegation <mode>        auto or conductor (default: auto)
+  --project <id>             Conductor project id for launch
+  --agent <name>             Harness override
+  --model <id>               Model override
+  --effort <level>           Effort override
+  --session <id>             Tracked session for status and feedback
+  --success <true|false>     Explicit review for feedback
+  --dataset <path>           Labeled fixtures for evaluate
+`;
 
 async function main() {
+  if (args.help) { console.log(usage); return; }
   const command = positionals[0];
   if (command === "mcp") { await startMcpServer(); return; }
   const policy = validatePolicy(await json(args.policy));
