@@ -217,17 +217,38 @@ export class ConductorClient {
   sessionMessages(sessionId: string, query?: { limit?: number; offset?: number; after?: string }) {
     return this.request("GET", `/v0/sessions/${encodeURIComponent(sessionId)}/messages`, undefined, query);
   }
-  /** Reads a whole session transcript through the public messages endpoint, page by page. */
+  /** Counts a session's messages without SQL: the messages endpoint only pages
+   * forward, so gallop then bisect on `hasMore` with one-message probes. */
+  async sessionMessageCount(sessionId: string, known = 0) {
+    let lo = known;
+    let hi = Number.POSITIVE_INFINITY;
+    for (let probes = 0; hi - lo > 0 && probes < 64; probes += 1) {
+      const offset = Number.isFinite(hi) ? lo + Math.floor((hi - lo - 1) / 2) : Math.max(1, lo * 2);
+      const page = await this.sessionMessages(sessionId, { limit: 1, offset });
+      const data = Array.isArray(page?.data) ? page.data : [];
+      if (!data.length) hi = offset;
+      else if (!page?.hasMore) return offset + 1;
+      else lo = offset + 1;
+    }
+    return lo;
+  }
+  /** Reads a session transcript through the public messages endpoint, page by
+   * page. A session longer than `maxMessages` keeps its NEWEST messages (the
+   * part a supervisor needs), with `firstOffset` saying where the window starts. */
   async allSessionMessages(sessionId: string, maxMessages = 1000) {
-    const rows: any[] = [];
-    for (let offset = 0; rows.length < maxMessages;) {
+    const first = await this.sessionMessages(sessionId, { limit: 100, offset: 0 });
+    const firstData: any[] = Array.isArray(first?.data) ? first.data : [];
+    const total = first?.hasMore && firstData.length ? await this.sessionMessageCount(sessionId, firstData.length) : firstData.length;
+    const start = Math.max(0, total - maxMessages);
+    const rows: any[] = start === 0 ? [...firstData] : [];
+    for (let offset = start + rows.length; rows.length < maxMessages && (start > 0 || first?.hasMore);) {
       const page = await this.sessionMessages(sessionId, { limit: 100, offset });
       const data = Array.isArray(page?.data) ? page.data : [];
       rows.push(...data);
-      if (!page?.hasMore || !data.length) return { messages: rows, truncated: false };
+      if (!page?.hasMore || !data.length) break;
       offset += data.length;
     }
-    return { messages: rows.slice(0, maxMessages), truncated: true };
+    return { messages: rows.slice(-maxMessages), truncated: start > 0, totalMessages: Math.max(total, start + rows.length), firstOffset: start };
   }
 }
 

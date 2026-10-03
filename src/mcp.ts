@@ -136,7 +136,7 @@ export function createMcpServer(env: NodeJS.ProcessEnv = process.env) {
 
   server.registerTool("conductor_transcript", {
     title: "Conductor transcript",
-    description: "Read a session transcript. With sessionId, reads Conductor's read-only SQL view session_transcripts_view and falls back to the public session messages endpoint when SQL is unavailable (condensed to user prompts, agent replies, commands and finalAnswer; raw true returns every message). A custom query must be a single SELECT on session_transcripts_view.",
+    description: "Read a session transcript. With sessionId, reads Conductor's read-only SQL view session_transcripts_view and falls back to the public session messages endpoint when SQL is unavailable (newest 1000 messages for long sessions; condensed to user prompts, agent replies, commands and finalAnswer; raw true returns every message). A custom query must be a single SELECT on session_transcripts_view.",
     inputSchema: { sessionId: z.string().optional(), query: z.string().optional(), raw: z.boolean().optional() },
     annotations: readOnly,
   }, async ({ sessionId, query, raw }) => {
@@ -146,9 +146,9 @@ export function createMcpServer(env: NodeJS.ProcessEnv = process.env) {
       try { return ok(await conductor.sql(statement)); }
       catch (sqlError) {
         if (query || !sessionId) throw sqlError;
-        const { messages, truncated } = await conductor.allSessionMessages(sessionId);
+        const { messages, truncated, totalMessages, firstOffset } = await conductor.allSessionMessages(sessionId);
         return ok({ source: "session_messages", sqlError: sqlError instanceof Error ? sqlError.message : "SQL unavailable", sessionId,
-          messageCount: messages.length, truncated, ...(raw ? { messages } : condenseTranscript(messages)) });
+          messageCount: messages.length, totalMessages, firstOffset, truncated, ...(raw ? { messages } : condenseTranscript(messages)) });
       }
     } catch (error) { return fail(error); }
   });

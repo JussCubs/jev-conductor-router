@@ -101,6 +101,27 @@ test("session create and message bodies match the public API", async () => {
   assert.deepEqual(bodies[1].body, { message: "next step" });
 });
 
+test("a long transcript keeps its newest messages instead of the first 1000", async () => {
+  const total = 2_537;
+  const urls: string[] = [];
+  const client = new ConductorClient({ apiKey: "conductor-secret", sleep, fetch: async (url) => {
+    urls.push(String(url));
+    const params = new URL(String(url)).searchParams;
+    const offset = Number(params.get("offset") ?? 0);
+    const limit = Number(params.get("limit") ?? 100);
+    const data = Array.from({ length: Math.max(0, Math.min(limit, total - offset)) }, (_, i) => ({ id: `m${offset + i}`, sessionIndex: offset + i }));
+    return Response.json({ data, offset, hasMore: offset + data.length < total });
+  } });
+  const result = await client.allSessionMessages("s");
+  assert.equal(result.truncated, true);
+  assert.equal(result.totalMessages, total);
+  assert.equal(result.firstOffset, total - 1000);
+  assert.equal(result.messages.length, 1000);
+  assert.equal(result.messages.at(-1).id, `m${total - 1}`);
+  assert.equal(result.messages[0].id, `m${total - 1000}`);
+  assert.ok(urls.length < 40, `bounded reads, got ${urls.length}`);
+});
+
 test("transcripts page through the public messages endpoint and condense to replies", async () => {
   const urls: string[] = [];
   const event = (i: number, payload: unknown) => ({ id: `m${i}`, sessionId: "s", sessionIndex: i, type: "agent", receivedAt: `2026-09-26T20:52:${10 + i}Z`, content: { rawPayload: { event: payload } } });
@@ -119,7 +140,7 @@ test("transcripts page through the public messages endpoint and condense to repl
   } });
   const { messages, truncated } = await client.allSessionMessages("s");
   assert.equal(messages.length, 5); assert.equal(truncated, false);
-  assert.equal(urls.length, 2);
+  assert.equal(urls.length, 4); // first page, two count probes, the rest
   assert.match(urls[0], /\/v0\/sessions\/s\/messages\?limit=100&offset=0$/);
   const condensed = condenseTranscript(messages);
   assert.deepEqual(condensed.entries.map((e) => e.role), ["user", "command", "agent", "agent"]);
